@@ -1,0 +1,13 @@
+//
+// Created by sylwia on 1/14/18.
+//
+
+#ifndef LINDACOMMUNICATION_INPUTMESSAGE_H
+#define LINDACOMMUNICATION_INPUTMESSAGE_H
+
+struct InputMessage
+{
+
+};
+
+#endif //LINDACOMMUNICATION_INPUTMESSAGE_H

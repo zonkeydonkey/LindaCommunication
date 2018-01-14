@@ -4,11 +4,15 @@
 
 #include <iostream>
 
+#include "server.h"
+
 using namespace std;
 
 int main()
 {
-    cout << "Hello" << endl;
+    Server * server = new Server ();
+    delete server;
+
     return 0;
 }
 

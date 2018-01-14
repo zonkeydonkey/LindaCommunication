@@ -1,0 +1,13 @@
+//
+// Created by sylwia on 1/14/18.
+//
+
+#ifndef LINDACOMMUNICATION_RESPONSEMESSAGE_H
+#define LINDACOMMUNICATION_RESPONSEMESSAGE_H
+
+struct ResponseMessage
+{
+
+};
+
+#endif //LINDACOMMUNICATION_RESPONSEMESSAGE_H
