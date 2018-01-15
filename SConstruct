@@ -4,6 +4,7 @@ env.Append(CXXFLAGS = ['-std=c++11', '-pthread', '-Wall', '-g'])
 libraries = ['pthread']
 
 env.Object('build/shared/confFile.o', 'src/shared/utils/confFile.cpp')
+env.Object('build/shared/linda.o', 'src/shared/linda/linda.cpp')
 
 env.Object('build/server/FileWorker.o', 'src/server/FileWorker.cpp')
 env.Object('build/server/main.o', 'src/server/main.cpp')

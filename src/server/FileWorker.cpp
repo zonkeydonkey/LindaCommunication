@@ -10,6 +10,6 @@ FileWorker::~FileWorker()
 
 void FileWorker::receiveMessage()
 {
-    std::cout << "FileWorker: wait for request" << std::endl;
+    //std::cout << "FileWorker: wait for request" << std::endl;
     //if(msgrcv(requestFileQueueId, &fileRequestMessage, sizeof()))
 }
