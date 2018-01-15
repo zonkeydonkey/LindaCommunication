@@ -4,9 +4,9 @@
 
 #include "server.h"
 
-const std::string Server::sharedConfFilename = "../LindaCommunication/src/shared/conf/queue.conf";
-const std::string Server::serverConfFilename = "../LindaCommunication/src/server/conf/queue.conf";
-const std::string Server::tupleSpaceConfFilename = "../LindaCommunication/src/server/conf/tupleSpace.conf";
+const std::string Server::sharedConfFilename = "../../src/shared/conf/queue.conf";
+const std::string Server::serverConfFilename = "../../src/server/conf/queue.conf";
+const std::string Server::tupleSpaceConfFilename = "../../src/server/conf/tupleSpace.conf";
 
 Server::Server()
 {
@@ -85,9 +85,9 @@ void * outputQueueThreadHandler (void * arg)
     return server;
 }
 
-void * fileWorkerThreadHandler (void * server)
+void *fileWorkerThreadHandler (void * server)
 {
-    Server * servPtr = static_cast<Server *>(server);
+    Server *servPtr = static_cast<Server *>(server);
     FileWorker *fileWorker = new FileWorker(servPtr->requestFileQueueId, servPtr->responseFileQueueId,
                                             servPtr->tupleSpaceFile);
     while(servPtr->running)
@@ -124,5 +124,3 @@ void Server::run ()
     pthread_join(outputMessagesThread, nullptr);
     pthread_join(fileWorkerThread, nullptr);
 }
-
-
