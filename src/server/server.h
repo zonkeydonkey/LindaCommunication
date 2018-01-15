@@ -16,6 +16,7 @@
 
 #include "FileWorker.h"
 #include "../shared/utils/confFile.h"
+#include "../shared/protocols/shared.h"
 
 class Server
 {

@@ -52,7 +52,7 @@ int Server::init()
 
 int Server::createMessageQueue (key_t key)
 {
-    int result = msgget (key, 0666 | IPC_CREAT);
+    int result = msgget (key, QUEUE_PERMS | IPC_CREAT);
     if (result < 0)
     {
         throw std::string ("Error while creating message queue with key: " + key);
