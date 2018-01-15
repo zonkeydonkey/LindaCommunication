@@ -4,30 +4,39 @@
 #include <iostream>
 #include <stdlib.h>
 #include <cstdarg>
-#include "tupleElement.h"
+#include <cstddef>
+#include <string>
+#include <list>
 
-#define INT_TYPE_CHAR 'i'
-#define STRING_TYPE_CHAR 's'
+#define INT_TYPE 'i'
+#define STRING_TYPE 's'
 
+typedef struct stringElement
+{
+    std::string value;
+    unsigned int idx;
+} stringElement;
+
+typedef struct intElement
+{
+    int value;
+    unsigned int idx;
+} intElement;
 
 typedef struct tuple
 {
-    unsigned int elementsCount;
-    struct tupleElement *elements;
+    std::list<stringElement> stringElements;
+    std::list<intElement> intElements;
 } tuple;
 
 /*
     To create tuple, using variable arguments list
 */
-tuple *makeTuple(std::string elementsTypesList, ...);
+tuple makeTuple(std::string elementsTypesList, ...);
 /*
     To allocate memory for tuple object
 */
-tuple *initializeTuple(unsigned int elementsCount);
-/*
-    To free memory of given tuple as param
-*/
-void *freeTuple(tuple *tuple);
+void freeTuple(tuple *tuple);
 /*
     To print data associated with tuple
 */

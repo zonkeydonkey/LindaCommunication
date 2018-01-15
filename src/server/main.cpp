@@ -18,6 +18,9 @@ void interruptHandler(int signum)
 
 int main()
 {
+    /*tuple myTuple = makeTuple("si", "lol", 2);
+    printTuple(&myTuple);
+    freeTuple(&myTuple);*/
     server = new Server ();
     if(server->init() == -1)
         return -1;

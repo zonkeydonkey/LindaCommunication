@@ -1,81 +1,76 @@
 #include "tuple.h"
 
 // support functions
-static void setTupleElement(va_list *elementsList, unsigned int idx, tuple *tuple, char typeChar);
+static void setTupleElement(va_list *elementsList, unsigned int idx, tuple *tuple, char type);
 
-tuple *makeTuple(std::string elementsTypesList, ...)
+tuple makeTuple(std::string elementsTypesList, ...)
 {
     // store the list of arguments
     va_list elementsList;
     // initialize elementsList
     va_start(elementsList, elementsTypesList);
-    unsigned int elementsCount = elementsTypesList.length();
-    tuple *resultTuple = initializeTuple(elementsCount);
-    for(unsigned int i = 0; i < resultTuple->elementsCount; ++i)
-        setTupleElement(&elementsList, i, resultTuple, elementsTypesList[i]);
+    tuple resultTuple;
+    for(unsigned int i = 0; i < elementsTypesList.length(); ++i)
+        setTupleElement(&elementsList, i, &resultTuple, elementsTypesList[i]);
     return resultTuple;
 }
 
-tuple *initializeTuple(unsigned int elementsCount)
+void freeTuple(tuple *tuple)
 {
-    tuple *resultTuple = (tuple *)malloc(sizeof(tuple));
-    resultTuple->elementsCount = elementsCount;
-    resultTuple->elements = (tupleElement *)malloc(sizeof(tupleElement) * elementsCount);
-    return resultTuple;
+    tuple->intElements.clear();
+    tuple->stringElements.clear();
 }
-
-void *freeTuple(tuple *tuple)
-{
-    for(unsigned int i = 0; i < tuple->elementsCount; ++i)
-    {
-        if(tuple->elements[i].type == STRING_TYPE)
-            free(tuple->elements[i].data.s);
-    }
-    free(tuple->elements);
-    free(tuple);
-}
-
 
 void printTuple(tuple *tuple)
 {
-    for(unsigned int i = 0; i < tuple->elementsCount; ++i)
+    unsigned int idx = 0;
+    std::list<intElement>::iterator intIter = tuple->intElements.begin();
+    for(std::list<stringElement>::iterator strIter = tuple->stringElements.begin();
+        strIter != tuple->stringElements.end(); ++strIter)
     {
-        std::cout << "Element " << i << ": ";
-        switch(tuple->elements[i].type)
+        std::cout << "Element " << idx << ": ";
+        if((*strIter).idx == idx)
         {
-            case INT_TYPE:
-                std::cout << "Type: int, ";
-                std::cout << "Value: " << tuple->elements[i].data.i << std::endl;
-                break;
-            case STRING_TYPE:
-                std::cout << "Type: string, ";
-                std::cout << "Value: " << tuple->elements[i].data.s << std::endl;
-                break;
+            std::cout << "Type: string, ";
+            std::cout << "Value: " << (*strIter).value << std::endl;
         }
+        else
+        {
+            std::cout << "Type: int, ";
+            std::cout << "Value: " << (*intIter).value << std::endl;
+            ++intIter;
+        }
+        ++idx;
+    }
+    for(;intIter != tuple->intElements.end(); ++intIter)
+    {
+        std::cout << "Element " << idx << ": ";
+        std::cout << "Type: int, ";
+        std::cout << "Value: " << (*intIter).value << std::endl;
+        ++idx;
     }
 }
 
-static void setTupleElement(va_list *elementsList, unsigned int idx, tuple *tuple, char typeChar)
+static void setTupleElement(va_list *elementsList, unsigned int idx, tuple *tuple, char type)
 {
-    switch(typeChar)
+    switch(type)
     {
-        case INT_TYPE_CHAR:
+        case INT_TYPE:
         {
-            tuple->elements[idx].type = INT_TYPE;
-            tuple->elements[idx].data.i = va_arg(*elementsList, int);
+            intElement element;
+            element.value = va_arg(*elementsList, int);
+            element.idx = idx;
+            tuple->intElements.push_back(element);
             break;
         }
-        case STRING_TYPE_CHAR:
+        case STRING_TYPE:
         {
-            tuple->elements[idx].type = STRING_TYPE;
+            stringElement element;
             char *tupleValue = va_arg(*elementsList, char *);
-            tuple->elements[idx].data.s = (char *)malloc(strlen(tupleValue) + 1);
-            strcpy(tuple->elements[idx].data.s, tupleValue);
+            element.value = std::string(tupleValue);
+            element.idx = idx;
+            tuple->stringElements.push_back(element);
             break;
-        }
-        default:
-        {
-            tuple->elements[idx].type = INVALID_TYPE;
         }
     }
 }
