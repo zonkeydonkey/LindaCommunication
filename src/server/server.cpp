@@ -32,6 +32,8 @@ int Server::init()
         std::string inputQueId = sharedConf->getProperty("input");
         std::string outputQueId = sharedConf->getProperty("output");
         std::string responseQueId = sharedConf->getProperty("response");
+        std::string inputMaxSize = sharedConf->getProperty("inputMaxSize");
+        std::string outputMaxSize = sharedConf->getProperty("outputMaxSize");
         std::string reqFileQueId = serverConf->getProperty("requestFile");
         std::string resFileQueId = serverConf->getProperty("responseFile");
 
@@ -41,6 +43,8 @@ int Server::init()
         requestFileQueueId = createMessageQueue (std::stoi(reqFileQueId));
         responseFileQueueId = createMessageQueue (std::stoi(resFileQueId));
         tupleSpaceFile = tupleSpaceConf->getProperty("tupleSpaceFile");
+        inputMessageMaxSize = (size_t) std::stoi(inputMaxSize);
+        outputMessageMaxSize = (size_t) std::stoi(outputMaxSize);
     }
     catch (std::string ex)
     {
@@ -68,6 +72,10 @@ void Server::stop()
 void * inputQueueThreadHandler (void * arg)
 {
     Server * server = static_cast<Server *> (arg);
+
+
+
+
     // TODO
     return nullptr;
 }
@@ -78,8 +86,14 @@ void * outputQueueThreadHandler (void * arg)
     OutputMessage message;
     while (server->running)
     {
+        if (msgrcv(server->outputQueueId, &message, server->outputMessageMaxSize, 0, 0) < 0)
+        {
+            std::cerr << "Error while reading from output message queue\n";
+            server->stop();
+            return server;
+        }
 
-        // TODO
+        server->processOutputMessage(message);
     }
 
     return server;
@@ -123,4 +137,18 @@ void Server::run ()
     pthread_join(inputMessagesThread, nullptr);
     pthread_join(outputMessagesThread, nullptr);
     pthread_join(fileWorkerThread, nullptr);
+}
+
+void Server::processOutputMessage(OutputMessage &message)
+{
+    FileRequestMessage fileRequest;
+    fileRequest.operation = Output;
+    std::strcpy(fileRequest.tuple, message.tuple);
+    size_t messageSize = sizeof(fileRequest);
+
+    if (msgsnd(requestFileQueueId, &fileRequest, messageSize, IPC_NOWAIT) < 0) {
+        std::cerr << "An attempt to send request to file worker has failed. Operation: output, tuple: "
+                  << fileRequest.tuple << ", message size: " << messageSize << std::endl;
+        stop();
+    }
 }

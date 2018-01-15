@@ -5,6 +5,7 @@ libraries = ['pthread']
 
 env.Object('build/shared/tuple.o', 'src/shared/linda/tuple.cpp')
 env.Object('build/shared/confFile.o', 'src/shared/utils/confFile.cpp')
+env.Object('build/shared/linda.o', 'src/shared/linda/linda.cpp')
 
 env.Object('build/server/FileWorker.o', 'src/server/FileWorker.cpp')
 env.Object('build/server/main.o', 'src/server/main.cpp')
