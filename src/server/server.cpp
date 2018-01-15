@@ -39,10 +39,11 @@ void Server::init()
         responseQueueId = createMessageQueue (std::stoi(responseQueId));
         requestFileQueueId = createMessageQueue (std::stoi(reqFileQueId));
         responseFileQueueId = createMessageQueue (std::stoi(resFileQueId));
-    } catch (std::string ex) {
+    }
+    catch (std::string ex)
+    {
         std::cerr << ex << std::endl;
     }
-
 }
 
 int Server::createMessageQueue (key_t key)
