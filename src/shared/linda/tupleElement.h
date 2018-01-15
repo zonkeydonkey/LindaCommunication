@@ -2,6 +2,7 @@
 #define TUPLE_TUPLEELEMENT_H
 
 #include <stdint.h>
+#include <string.h>
 #include <string>
 
 #define INVALID_TYPE 0x00
@@ -14,7 +15,7 @@ typedef struct tupleElement
     union
     {
         int i;
-        std::string s;
+        char *s;
     } data;
 } tupleElement;
 

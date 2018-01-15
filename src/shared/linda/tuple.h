@@ -1,6 +1,7 @@
 #ifndef TUPLE_TUPLE_H
 #define TUPLE_TUPLE_H
 
+#include <iostream>
 #include <stdlib.h>
 #include <cstdarg>
 #include "tupleElement.h"
@@ -20,8 +21,16 @@ typedef struct tuple
 */
 tuple *makeTuple(std::string elementsTypesList, ...);
 /*
-    To allocate memory for tuple object and set types for tuple elements
+    To allocate memory for tuple object
 */
-tuple *initializeTuple(std::string elementsTypesList);
+tuple *initializeTuple(unsigned int elementsCount);
+/*
+    To free memory of given tuple as param
+*/
+void *freeTuple(tuple *tuple);
+/*
+    To print data associated with tuple
+*/
+void printTuple(tuple *tuple);
 
 #endif //TUPLE_TUPLE_H
