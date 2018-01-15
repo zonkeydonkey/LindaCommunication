@@ -6,10 +6,10 @@
 
 const std::string Server::sharedConfFilename = "../LindaCommunication/src/shared/conf/queue.conf";
 const std::string Server::serverConfFilename = "../LindaCommunication/src/server/conf/queue.conf";
+const std::string Server::tupleSpaceConfFilename = "../LindaCommunication/src/server/conf/tupleSpace.conf";
 
 Server::Server()
 {
-    init();
 }
 
 Server::~Server()
@@ -21,12 +21,13 @@ Server::~Server()
     msgctl(responseFileQueueId, IPC_RMID, nullptr);
 }
 
-void Server::init()
+int Server::init()
 {
     try
     {
         std::shared_ptr<ConfFile> sharedConf = std::make_shared<ConfFile> (sharedConfFilename);
         std::shared_ptr<ConfFile> serverConf = std::make_shared<ConfFile> (serverConfFilename);
+        std::shared_ptr<ConfFile> tupleSpaceConf = std::make_shared<ConfFile> (tupleSpaceConfFilename);
 
         std::string inputQueId = sharedConf->getProperty("input");
         std::string outputQueId = sharedConf->getProperty("output");
@@ -39,11 +40,14 @@ void Server::init()
         responseQueueId = createMessageQueue (std::stoi(responseQueId));
         requestFileQueueId = createMessageQueue (std::stoi(reqFileQueId));
         responseFileQueueId = createMessageQueue (std::stoi(resFileQueId));
+        tupleSpaceFile = tupleSpaceConf->getProperty("tupleSpaceFile");
     }
     catch (std::string ex)
     {
         std::cerr << ex << std::endl;
+        return -1;
     }
+    return 0;
 }
 
 int Server::createMessageQueue (key_t key)
@@ -56,10 +60,54 @@ int Server::createMessageQueue (key_t key)
     return result;
 }
 
-void Server::run ()     // TODO - watek zarzadcy pliku
+void Server::stop()
+{
+    running = false;
+}
+
+void * inputQueueThreadHandler (void * arg)
+{
+    Server * server = static_cast<Server *> (arg);
+    // TODO
+    return nullptr;
+}
+
+void * outputQueueThreadHandler (void * arg)
+{
+    Server * server = static_cast<Server *> (arg);
+    OutputMessage message;
+    while (server->running)
+    {
+        if (msgrcv(server->outputQueueId, &message, MSGSZ, 0, 0) < 0)
+        {
+            std::cerr << "Error while reading from output message queue\n";
+            exit(-1);
+        }
+        // TODO
+    }
+
+    return server;
+}
+
+void * fileWorkerThreadHandler (void * server)
+{
+    Server * servPtr = static_cast<Server *>(server);
+    FileWorker *fileWorker = new FileWorker(servPtr->requestFileQueueId, servPtr->responseFileQueueId,
+                                            servPtr->tupleSpaceFile);
+    while(servPtr->running)
+    {
+        fileWorker->receiveMessage();
+    }
+
+    delete fileWorker;
+    return nullptr;
+}
+
+void Server::run ()
 {
     pthread_t inputMessagesThread;
     pthread_t outputMessagesThread;
+    pthread_t fileWorkerThread;
 
     if(pthread_create(&inputMessagesThread, nullptr, &inputQueueThreadHandler, this)) {
         std::cerr << "Error creating input messages thread\n";
@@ -71,17 +119,14 @@ void Server::run ()     // TODO - watek zarzadcy pliku
         return;
     }
 
+    if(pthread_create(&fileWorkerThread, nullptr, &fileWorkerThreadHandler, this)) {
+        std::cerr << "Error creating file worker thread\n";
+        return;
+    }
+
     pthread_join(inputMessagesThread, nullptr);
     pthread_join(outputMessagesThread, nullptr);
+    pthread_join(fileWorkerThread, nullptr);
 }
 
-void * inputQueueThreadHandler (void * server)
-{
-    return nullptr;
-}
-
-void * outputQueueThreadHandler (void * server)
-{
-    return nullptr;
-}
 

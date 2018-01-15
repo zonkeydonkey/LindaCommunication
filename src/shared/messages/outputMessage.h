@@ -5,9 +5,10 @@
 #ifndef LINDACOMMUNICATION_OUTPUTMESSAGE_H
 #define LINDACOMMUNICATION_OUTPUTMESSAGE_H
 
-struct OutputMessage
+typedef struct OutputMessage
 {
-
-};
+    pid_t PID;
+    std::string tuple;
+} OutputMessage;
 
 #endif //LINDACOMMUNICATION_OUTPUTMESSAGE_H
