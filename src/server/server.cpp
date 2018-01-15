@@ -4,12 +4,12 @@
 
 #include "server.h"
 
-const std::string Server::sharedConfFilename = "../LindaCommunication/src/shared/conf/queue.conf";
-const std::string Server::serverConfFilename = "../LindaCommunication/src/server/conf/queue.conf";
+const std::string Server::sharedConfFilename = "../../src/shared/conf/queue.conf";
+const std::string Server::serverConfFilename = "../../src/server/conf/queue.conf";
+const std::string Server::tupleSpaceConfFilename = "../../src/server/conf/tupleSpace.conf";
 
 Server::Server()
 {
-    init();
 }
 
 Server::~Server()
@@ -21,12 +21,13 @@ Server::~Server()
     msgctl(responseFileQueueId, IPC_RMID, nullptr);
 }
 
-void Server::init()
+int Server::init()
 {
     try
     {
         std::shared_ptr<ConfFile> sharedConf = std::make_shared<ConfFile> (sharedConfFilename);
         std::shared_ptr<ConfFile> serverConf = std::make_shared<ConfFile> (serverConfFilename);
+        std::shared_ptr<ConfFile> tupleSpaceConf = std::make_shared<ConfFile> (tupleSpaceConfFilename);
 
         std::string inputQueId = sharedConf->getProperty("input");
         std::string outputQueId = sharedConf->getProperty("output");
@@ -39,10 +40,14 @@ void Server::init()
         responseQueueId = createMessageQueue (std::stoi(responseQueId));
         requestFileQueueId = createMessageQueue (std::stoi(reqFileQueId));
         responseFileQueueId = createMessageQueue (std::stoi(resFileQueId));
-    } catch (std::string ex) {
-        std::cerr << ex << std::endl;
+        tupleSpaceFile = tupleSpaceConf->getProperty("tupleSpaceFile");
     }
-
+    catch (std::string ex)
+    {
+        std::cerr << ex << std::endl;
+        return -1;
+    }
+    return 0;
 }
 
 int Server::createMessageQueue (key_t key)
@@ -55,10 +60,25 @@ int Server::createMessageQueue (key_t key)
     return result;
 }
 
-void Server::run ()     // TODO - watek zarzadcy pliku
+int Server::getRequestFileQueueId()
+{
+    return requestFileQueueId;
+}
+int Server::getResponseFileQueueId()
+{
+    return responseFileQueueId;
+}
+std::string Server::getTupleSpaceFile()
+{
+    return tupleSpaceFile;
+}
+
+
+void Server::run ()
 {
     pthread_t inputMessagesThread;
     pthread_t outputMessagesThread;
+    pthread_t fileWorkerThread;
 
     if(pthread_create(&inputMessagesThread, nullptr, &inputQueueThreadHandler, this)) {
         std::cerr << "Error creating input messages thread\n";
@@ -70,8 +90,14 @@ void Server::run ()     // TODO - watek zarzadcy pliku
         return;
     }
 
+    if(pthread_create(&fileWorkerThread, nullptr, &fileWorkerThreadHandler, this)) {
+        std::cerr << "Error creating file worker thread\n";
+        return;
+    }
+
     pthread_join(inputMessagesThread, nullptr);
     pthread_join(outputMessagesThread, nullptr);
+    pthread_join(fileWorkerThread, nullptr);
 }
 
 void * inputQueueThreadHandler (void * server)
@@ -84,3 +110,16 @@ void * outputQueueThreadHandler (void * server)
     return nullptr;
 }
 
+void * fileWorkerThreadHandler (void * server)
+{
+    Server * servPtr = static_cast<Server *>(server);
+    FileWorker *fileWorker = new FileWorker(servPtr->getRequestFileQueueId(), servPtr->getResponseFileQueueId(),
+                                            servPtr->getTupleSpaceFile());
+    while(servPtr->running)
+    {
+        fileWorker->receiveMessage();
+    }
+
+    delete fileWorker;
+    return nullptr;
+}

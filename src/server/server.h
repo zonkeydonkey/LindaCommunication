@@ -14,6 +14,7 @@
 #include <memory>
 #include <iostream>
 
+#include "FileWorker.h"
 #include "../shared/utils/confFile.h"
 
 class Server
@@ -21,25 +22,34 @@ class Server
 private:
     static const std::string sharedConfFilename;
     static const std::string serverConfFilename;
+    static const std::string tupleSpaceConfFilename;
 
     int inputQueueId;
     int outputQueueId;
     int responseQueueId;
     int requestFileQueueId;
     int responseFileQueueId;
+    std::string tupleSpaceFile;
 
 public:
-    Server ();
-    ~Server();
+    volatile int running = 1;
 
+    Server ();
+    ~Server ();
+
+    int getRequestFileQueueId();
+    int getResponseFileQueueId();
+    std::string getTupleSpaceFile();
+
+    int init();
     void run ();
 
 private:
-    void init();
     int createMessageQueue (key_t key);
 };
 
 void * inputQueueThreadHandler (void * server);
 void * outputQueueThreadHandler (void * server);
+void * fileWorkerThreadHandler (void * server);
 
 #endif //LINDACOMMUNICATION_SERVER_H

@@ -7,7 +7,7 @@
 
 struct FileRequestMessage
 {
-
+    long mPrior;
 };
 
 #endif //LINDACOMMUNICATION_FILEREQUESTMESSAGE_H
