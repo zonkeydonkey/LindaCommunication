@@ -26,13 +26,14 @@ void printTuple(tuple *tuple)
     unsigned int idx = 0;
     std::list<intElement>::iterator intIter = tuple->intElements.begin();
     for(std::list<stringElement>::iterator strIter = tuple->stringElements.begin();
-        strIter != tuple->stringElements.end(); ++strIter)
+        strIter != tuple->stringElements.end();)
     {
         std::cout << "Element " << idx << ": ";
         if((*strIter).idx == idx)
         {
             std::cout << "Type: string, ";
             std::cout << "Value: " << (*strIter).value << std::endl;
+            ++strIter;
         }
         else
         {
@@ -58,7 +59,7 @@ static void setTupleElement(va_list *elementsList, unsigned int idx, tuple *tupl
         case INT_TYPE:
         {
             intElement element;
-            element.value = va_arg(*elementsList, int);
+            element.value = va_arg(*elementsList, int);;
             element.idx = idx;
             tuple->intElements.push_back(element);
             break;
@@ -66,8 +67,8 @@ static void setTupleElement(va_list *elementsList, unsigned int idx, tuple *tupl
         case STRING_TYPE:
         {
             stringElement element;
-            char *tupleValue = va_arg(*elementsList, char *);
-            element.value = std::string(tupleValue);
+            char *argValue = va_arg(*elementsList, char *);
+            element.value = std::string(argValue);
             element.idx = idx;
             tuple->stringElements.push_back(element);
             break;

@@ -12,13 +12,12 @@ Server * server;
 
 void interruptHandler(int signum)
 {
-    // na razie
     server->stop();
 }
 
 int main()
 {
-    /*tuple myTuple = makeTuple("si", "lol", 2);
+    /*tuple myTuple = makeTuple("siii", "lol", 2, 3 ,4);
     printTuple(&myTuple);
     freeTuple(&myTuple);*/
     server = new Server ();
