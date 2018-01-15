@@ -17,6 +17,7 @@
 #include "FileWorker.h"
 #include "../shared/utils/confFile.h"
 #include "../shared/messages/outputMessage.h"
+#include "../shared/messages/shared.h"
 
 class Server
 {

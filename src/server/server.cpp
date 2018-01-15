@@ -52,7 +52,7 @@ int Server::init()
 
 int Server::createMessageQueue (key_t key)
 {
-    int result = msgget (key, 0666 | IPC_CREAT);
+    int result = msgget (key, QUEUE_PERMS | IPC_CREAT);
     if (result < 0)
     {
         throw std::string ("Error while creating message queue with key: " + key);
@@ -78,11 +78,7 @@ void * outputQueueThreadHandler (void * arg)
     OutputMessage message;
     while (server->running)
     {
-        if (msgrcv(server->outputQueueId, &message, MSGSZ, 0, 0) < 0)
-        {
-            std::cerr << "Error while reading from output message queue\n";
-            exit(-1);
-        }
+
         // TODO
     }
 
