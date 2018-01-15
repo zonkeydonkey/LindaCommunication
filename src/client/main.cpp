@@ -3,12 +3,16 @@
 //
 
 #include <iostream>
+#include "Client.h"
 
 using namespace std;
 
+Client *client;
+
 int main()
 {
-    cout << "Hello" << endl;
+	client = new Client();
+    while (client->dispatchCommand()) {};
     return 0;
 }
 
