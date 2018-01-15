@@ -99,9 +99,9 @@ void * outputQueueThreadHandler (void * arg)
     return server;
 }
 
-void * fileWorkerThreadHandler (void * server)
+void *fileWorkerThreadHandler (void * server)
 {
-    Server * servPtr = static_cast<Server *>(server);
+    Server *servPtr = static_cast<Server *>(server);
     FileWorker *fileWorker = new FileWorker(servPtr->requestFileQueueId, servPtr->responseFileQueueId,
                                             servPtr->tupleSpaceFile);
     while(servPtr->running)
@@ -152,4 +152,3 @@ void Server::processOutputMessage(OutputMessage &message)
         stop();
     }
 }
-

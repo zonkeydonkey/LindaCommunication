@@ -6,8 +6,7 @@
 #include <signal.h>
 
 #include "server.h"
-
-using namespace std;
+#include "../shared/linda/tuple.h"
 
 Server * server;
 
