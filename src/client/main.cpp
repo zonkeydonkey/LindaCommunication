@@ -12,8 +12,8 @@ Client *client;
 int main()
 {
 	client = new Client();
-	
-	client->run();
+
+	client->run(); //czytaj i wykonuj polecenia 
 
 	delete client;
 

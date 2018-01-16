@@ -14,7 +14,8 @@ public:
 
 	Source() {}; 
 
-	void nextLine() {
+	void nextLine() 
+	{
 		command = "";
 		nr = 0;
 		getline(std::cin, command);
@@ -22,7 +23,8 @@ public:
 
 	char nextChar() 
 	{
-		if (nr < command.length()) {
+		if (nr < command.length()) 
+		{
 			return command[nr++];
 		}
 		return -1;
