@@ -3,13 +3,13 @@
 // support macro
 #define writeToBuffer(what, buffer, buffer_begin, size, current, type)\
     do{\
-        if ((size) < (int)(sizeof((what)))) {\
+        if (*(size) < (int)(sizeof((what)))) {\
             *(buffer_begin) = (current);\
             return (current);\
         }\
         *(type *)(buffer) = (what);\
         (buffer) += sizeof((what));\
-        (size) -= sizeof((what));\
+        *(size) -= sizeof((what));\
     } while(0)
 
 #define readFromBuffer(what, buffer, type)\
@@ -72,7 +72,7 @@ void printTuple(tuple *tuple)
     }
 }
 
-int serializeTuple(const tuple *tuple, char *buffer, int size)
+int serializeTuple(const tuple *tuple, char *buffer, int *size)
 {
     unsigned *buffer_begin = (unsigned *)buffer;
     unsigned idx = 0;
@@ -85,14 +85,14 @@ int serializeTuple(const tuple *tuple, char *buffer, int size)
         {
             writeToBuffer((uint8_t)STRING_TYPE, buffer, buffer_begin, size, idx, uint8_t);
             int stringLength = (*strIter).value.length();
-            if(size < stringLength + 1)
+            if(*size < stringLength + 1)
             {
                 *buffer_begin = idx;
                 return idx;
             }
             strcpy(buffer, (*strIter).value.c_str());
             buffer += stringLength + 1;
-            size -= stringLength + 1;
+            *size -= stringLength + 1;
             ++strIter;
         }
         else if((*intIter).idx == idx)
