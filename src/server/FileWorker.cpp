@@ -16,24 +16,54 @@ int FileWorker::receiveMessage()
         perror("File Worker - message receiving error: ");
         return -1;
     }
-    std::cout << "File Worker Thread received message." << std::endl;
+    std::cout << "File Worker - received message" << std::endl;
 
     switch(msg.operation)
     {
         case Output:
         {
             if(printToFile(msg.tuple, msg.tupleBufferBytes) == -1)
-                std::cout << "Cannot save tuple in the tuple space" << std::endl;
+            {
+                std::cout << "File Worker - cannot save tuple in the tuple space" << std::endl;
+                // wyslanie komunikatu o bledzie
+            }
+            // wyslanie komunikatu ze sie udalo
             break;
         }
         case Input:
         {
-            std::cout << "input" << std::endl;
+            unsigned idx;
+            const char *tupleBuffer;
+            while((tupleBuffer = readFromFile(idx)) != NULL)
+            {
+                tuple deserializedTuple = deserializeTuple(tupleBuffer);
+                // porównanie z templatem
+                if(true)
+                {
+                    // wyslanie komunikatu
+                    return 0;
+                }
+                ++idx;
+            }
+            // nie znaleziono krotki wiec odsylamy nulla
             break;
         }
         case Read:
         {
-            std::cout << "read" << std::endl;
+            unsigned idx;
+            const char *tupleBuffer;
+            while((tupleBuffer = readFromFile(idx)) != NULL)
+            {
+                tuple deserializedTuple = deserializeTuple(tupleBuffer);
+                // porównanie z templatem
+                if(true)
+                {
+                    // wyslanie komunikatu
+                    return 0;
+                }
+                ++idx;
+            }
+            // nie znaleziono krotki wiec odsylamy nulla
             break;
         }
     }

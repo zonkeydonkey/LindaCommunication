@@ -5,9 +5,17 @@
 #ifndef LINDACOMMUNICATION_FILERESPONSEMESSAGE_H
 #define LINDACOMMUNICATION_FILERESPONSEMESSAGE_H
 
-struct FileResponseMessage
-{
+#include "../../shared/linda/tuple.h"
+#include "../../shared/messages/shared.h"
 
-};
+enum ThreadID {Out, In};
+
+typedef struct FileResponseMessage
+{
+    long msgType;
+    ThreadID threadID;
+    tuple foundTuple;
+    int errorCode;
+} FileResponseMessage;
 
 #endif //LINDACOMMUNICATION_FILERESPONSEMESSAGE_H
