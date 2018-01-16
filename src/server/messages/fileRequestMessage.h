@@ -12,9 +12,10 @@ enum FileOperation {Read, Input, Output};
 
 typedef struct FileRequestMessage
 {
+    long mtype;
     TupleTemplate tupleTemplate;
     FileOperation operation;
-    char tuple [MAX_TUPLE_SIZE];
+    char tuple [TUPLE_MAX_SIZE];
 } FileRequestMessage;
 
 #endif //LINDACOMMUNICATION_FILEREQUESTMESSAGE_H

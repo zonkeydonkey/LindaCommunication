@@ -7,6 +7,7 @@
 
 #include <list>
 #include <string>
+#include "../messages/shared.h"
 
 #define MAX_ELEMENTS 10
 
@@ -23,12 +24,14 @@ typedef struct NumberTemplate
 
 typedef struct TextTemplate
 {
-    std::string value;
+    char value[MAX_TEXT_SIZE];
     int order;
 } TextTemplate;
 
 typedef struct TupleTemplate
 {
+    int numberNb;
+    int textNb;
     TextTemplate texts [MAX_ELEMENTS];
     NumberTemplate numbers [MAX_ELEMENTS];
 } TupleTemplate;
