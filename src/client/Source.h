@@ -16,6 +16,7 @@ public:
 
 	void nextLine() 
 	{
+		std::cout << "> ";
 		command = "";
 		nr = 0;
 		getline(std::cin, command);
