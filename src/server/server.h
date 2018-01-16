@@ -14,12 +14,17 @@
 #include <memory>
 #include <iostream>
 #include <cstring>
+#include <ctime>
+#include <unistd.h>
 
 #include "FileWorker.h"
 #include "../shared/utils/confFile.h"
 #include "../shared/messages/outputMessage.h"
 #include "../shared/messages/shared.h"
 #include "messages/fileRequestMessage.h"
+#include "../shared/messages/inputMessage.h"
+#include "../shared/messages/responseMessage.h"
+#include "messages/fileResponseMessage.h"
 
 class Server
 {
@@ -34,9 +39,6 @@ protected:
     int requestFileQueueId;
     int responseFileQueueId;
     std::string tupleSpaceFile;
-
-    size_t inputMessageMaxSize;
-    size_t outputMessageMaxSize;
 
     volatile bool running = true;
 
@@ -57,6 +59,14 @@ private:
 
 protected:
     void processOutputMessage(OutputMessage &message);
+    void sendTimeoutedInfo(long PID);
+    void processHighPriorityInput(InputMessage &message);
+    FileResponseMessage tryFindTuple(InputMessage &inputMessage);
+    void sendTupleFoundInfo(FileResponseMessage &fileResponseMessage);
+    void sendBackTuple(FileResponseMessage &fileResponseMessage);
+    void processInputMessage(InputMessage &message);
+    void sendBackInputMessage(InputMessage &previous);
+    void processTupleFound(InputMessage &inputMessage, FileResponseMessage &responseMessage);
 };
 
 #endif //LINDACOMMUNICATION_SERVER_H

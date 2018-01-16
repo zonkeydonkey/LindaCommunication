@@ -32,8 +32,6 @@ int Server::init()
         std::string inputQueId = sharedConf->getProperty("input");
         std::string outputQueId = sharedConf->getProperty("output");
         std::string responseQueId = sharedConf->getProperty("response");
-        std::string inputMaxSize = sharedConf->getProperty("inputMaxSize");
-        std::string outputMaxSize = sharedConf->getProperty("outputMaxSize");
         std::string reqFileQueId = serverConf->getProperty("requestFile");
         std::string resFileQueId = serverConf->getProperty("responseFile");
 
@@ -43,8 +41,6 @@ int Server::init()
         requestFileQueueId = createMessageQueue (std::stoi(reqFileQueId));
         responseFileQueueId = createMessageQueue (std::stoi(resFileQueId));
         tupleSpaceFile = tupleSpaceConf->getProperty("tupleSpaceFile");
-        inputMessageMaxSize = (size_t) std::stoi(inputMaxSize);
-        outputMessageMaxSize = (size_t) std::stoi(outputMaxSize);
     }
     catch (std::string ex)
     {
@@ -69,30 +65,133 @@ void Server::stop()
     running = false;
 }
 
+void Server::sendTimeoutedInfo(long PID)
+{
+    ResponseMessage response;
+    response.mtype = PID;
+    response.errorCode = Timeouted;
+
+    if (msgsnd(responseQueueId, &response, sizeof(response) - sizeof(long), IPC_NOWAIT) < 0)
+    {
+        std::cerr << "An attempt to send response (timeouted info) has failed." << std::endl;
+        stop();
+    }
+}
+
+FileResponseMessage Server::tryFindTuple(InputMessage &inputMessage)
+{
+    FileRequestMessage fileRequest;
+    fileRequest.mtype = inputMessage.PID;
+    fileRequest.tupleTemplate = inputMessage.tupleTemplate;
+    fileRequest.operation = inputMessage.isRead ? Read : Input;
+
+    if (msgsnd(requestFileQueueId, &fileRequest, sizeof(fileRequest) - sizeof(long), IPC_NOWAIT) < 0)
+    {
+        std::cerr << "An attempt to send request to file worker has failed. Operation: input/read" << std::endl;
+        stop();
+    }
+
+    FileResponseMessage fileResponse;
+
+    if (msgrcv(responseFileQueueId, &fileResponse, FILE_RESPONSE_MAX_SIZE, inputMessage.PID, 0) < 0)
+    {
+        std::cerr << "Error while attempting to get response from file worker for process with PID: " << inputMessage.PID << std::endl;
+        stop();
+    }
+
+    return fileResponse;
+}
+
+void Server::sendTupleFoundInfo (FileResponseMessage &fileResponseMessage)
+{
+    ResponseMessage responseMessage;
+    std::strcpy(responseMessage.tuple, fileResponseMessage.tuple);
+    responseMessage.errorCode = ResponseError::ResponseOK;
+    responseMessage.mtype = fileResponseMessage.mtype;
+
+    if (msgsnd(responseQueueId, &responseMessage, sizeof(responseMessage), IPC_NOWAIT) < 0) {
+        std::cerr << "An attempt to send response with tuple has failed. Process PID: " << responseMessage.mtype
+                << ", tuple: " << responseMessage.tuple << std::endl;
+        stop();
+    }
+}
+
+void Server::sendBackTuple(FileResponseMessage &fileResponseMessage)
+{
+    OutputMessage outputMessage;
+    std::strcpy(outputMessage.tuple, fileResponseMessage.tuple);
+    outputMessage.PID = fileResponseMessage.mtype;
+
+    if (msgsnd(outputQueueId, &outputMessage, sizeof(outputMessage), IPC_NOWAIT) < 0) {
+        std::cerr << "An attempt to resend message with tuple has failed. Process PID: " << outputMessage.PID
+                  << ", tuple: " << outputMessage.tuple << std::endl;
+        stop();
+    }
+}
+
+void Server::processHighPriorityInput(InputMessage &inputMessage)
+{
+    while (true)
+    {
+        if (std::time(0) > (inputMessage.timestamp + inputMessage.timeout))
+        {
+            sendTimeoutedInfo(inputMessage.PID);
+            return;
+        }
+        else
+        {
+            FileResponseMessage responseMessage = tryFindTuple(inputMessage);
+            if (responseMessage.errorCode == FileResponseOK)
+            {
+                processTupleFound(inputMessage, responseMessage);
+                return;
+            }
+            else
+            {
+                sleep(WAIT_SECONDS);
+            }
+        }
+    }
+}
+
 void * inputQueueThreadHandler (void * arg)
 {
     Server * server = static_cast<Server *> (arg);
+    InputMessage inputMessage;
 
-
-
-
-    // TODO
-    return nullptr;
+    while (server->running)
+    {
+        if (msgrcv(server->inputQueueId, &inputMessage, INPUT_MESSAGE_MAX_SIZE, HIGHEST_PRIORITY, IPC_NOWAIT) >= 0)
+        {
+            server->processHighPriorityInput(inputMessage);
+        }
+        else
+        {
+            if (msgrcv(server->inputQueueId, &inputMessage, INPUT_MESSAGE_MAX_SIZE, 0, 0) < 0)
+            {
+                std::cerr << "Error while reading from input message queue\n";
+                server->stop();
+                return server;
+            }
+            server->processInputMessage(inputMessage);
+        }
+    }
+    return server;
 }
 
 void * outputQueueThreadHandler (void * arg)
 {
     Server * server = static_cast<Server *> (arg);
     OutputMessage message;
+
     while (server->running)
     {
-        if (msgrcv(server->outputQueueId, &message, server->outputMessageMaxSize, 0, 0) < 0)
+        if (msgrcv(server->outputQueueId, &message, OUTPUT_MESSAGE_MAX_SIZE, 0, 0) < 0)
         {
             std::cerr << "Error while reading from output message queue\n";
             server->stop();
             return server;
         }
-
         server->processOutputMessage(message);
     }
 
@@ -135,9 +234,6 @@ void Server::run ()
         return;
     }
 
-    //OutputMessage message;
-    //processOutputMessage(message);
-
     pthread_join(inputMessagesThread, nullptr);
     pthread_join(outputMessagesThread, nullptr);
     pthread_join(fileWorkerThread, nullptr);
@@ -148,11 +244,54 @@ void Server::processOutputMessage(OutputMessage &message)
     FileRequestMessage fileRequest;
     fileRequest.operation = Output;
     std::strcpy(fileRequest.tuple, message.tuple);
-    size_t messageSize = sizeof(fileRequest);
+    fileRequest.mtype = message.PID;
 
-    if (msgsnd(requestFileQueueId, &fileRequest, messageSize, IPC_NOWAIT) < 0) {
+    if (msgsnd(requestFileQueueId, &fileRequest, sizeof(fileRequest) - sizeof(long), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to send request to file worker has failed. Operation: output, tuple: "
-                  << fileRequest.tuple << ", message size: " << messageSize << std::endl;
+                  << fileRequest.tuple << ", process PID: " << fileRequest.mtype << std::endl;
         stop();
+    }
+}
+
+void Server::processInputMessage(InputMessage &inputMessage)
+{
+    if (std::time(0) > (inputMessage.timestamp + inputMessage.timeout))
+    {
+        sendTimeoutedInfo(inputMessage.PID);
+    }
+    else
+    {
+        FileResponseMessage responseMessage = tryFindTuple(inputMessage);
+        if (responseMessage.errorCode == FileResponseOK)
+        {
+            processTupleFound(inputMessage, responseMessage);
+        }
+        else
+        {
+            sendBackInputMessage(inputMessage);
+        }
+    }
+}
+
+void Server::sendBackInputMessage(InputMessage &previous)
+{
+    previous.mtype = previous.mtype + 1;
+
+    if (msgsnd(inputQueueId, &previous, sizeof(previous) - sizeof(long), IPC_NOWAIT) < 0) {
+        std::cerr << "An attempt to send back input message has failed, process PID: " << previous.PID << std::endl;
+        stop();
+    }
+}
+
+void Server::processTupleFound(InputMessage &inputMessage, FileResponseMessage &responseMessage)
+{
+    if (std::time(0) > (inputMessage.timestamp + inputMessage.timeout))
+    {
+        sendTimeoutedInfo(inputMessage.PID);
+        sendBackTuple(responseMessage);
+    }
+    else
+    {
+        sendTupleFoundInfo(responseMessage);
     }
 }
