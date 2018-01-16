@@ -28,10 +28,10 @@ public:
 
 	void run() 
 	{
-		bool cmd;
 		while (true)
 		{
-			cmd = parse->parseCommand();
+			tuple t = parse->parseCommand();
+			printTuple(&t);
 		}
 	}
 };

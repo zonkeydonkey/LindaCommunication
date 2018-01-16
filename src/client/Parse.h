@@ -2,6 +2,7 @@
 #define LINDACOMMUNICATION_PARSE_H
 
 #include "Scan.h"
+#include "../shared/linda/tuple.h"
 
 class Parse {
 private:
@@ -28,34 +29,36 @@ public:
 		delete scan;
 	}
 
-	bool parseCommand() {
+	tuple parseError() {
+		std::cout << "Błąd w poleceniu. Spróbuj ponownie\n";
+		return makeTuple("");
+	}
+
+	tuple parseCommand() {
+		std::string types = "";
 		scan->nextLine();
 		curToken = scan->nextToken();
 		if (!accept(output) && !accept(input) && !accept(read)) {
-			std::cout << "Błąd w poleceniu. Spróbuj ponownie\n";
-			return false;
+			return parseError();
 		}
 		if (!accept(lBracket)) {
-			std::cout << "Błąd w poleceniu. Spróbuj ponownie\n";
-			return false;
+			return parseError();
 		}
+		
 		while (true) 
 		{
 			if (!accept(string) && !accept(integer)) {
-				std::cout << "Błąd w poleceniu. Spróbuj ponownie\n";
-				return false;
+				return parseError();
 			}
 			if (!accept(colonOp)) {
-				std::cout << "Błąd w poleceniu. Spróbuj ponownie\n";
-				return false;
+				return parseError();
 			}
 			if (!accept(greaterThan) && !accept(greaterEqual) &&
 				!accept(lessThan) && !accept(lessEqual) &&
 				!accept(notEqual) && !accept(equals) &&
 				!accept(intConst) && !accept(stringConst) && 
 				!accept(starOp)) {
-				std::cout << "Błąd w poleceniu. Spróbuj ponownie\n";
-				return false;
+				return parseError();
 			}
 			if (!accept(commaOp)) {
 				break;
@@ -63,8 +66,12 @@ public:
 		}
 		if (!accept(rBracket))
 			std::cout << "Błąd w poleceniu. Spróbuj ponownie\n";
-		return true;
+		return makeTuple("si", "lol", 1, "xD");
 	}
+
+	// tuple parseTupleTemplate() {
+
+	// }
 };
 
 #endif

@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include <utility>
+
 #include "Source.h"
 
 enum Atom {
@@ -37,14 +37,8 @@ private:
 	typedef std::vector<std::pair<std::string, Atom> > Map;
 	Map keywords;
 public:
-	Keywords() {
-		keywords.push_back(std::make_pair("output",output));
-		keywords.push_back(std::make_pair("input",input));
-		keywords.push_back(std::make_pair("read",read));
-		keywords.push_back(std::make_pair("integer",integer));
-		keywords.push_back(std::make_pair("string",string));
-	}
-
+	Keywords();
+	
 	Atom find(std::string str) 
 	{
 		for (size_t i = 0; i != keywords.size(); ++i)
