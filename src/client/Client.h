@@ -30,8 +30,11 @@ public:
 	{
 		while (true)
 		{
-			tuple t = parse->parseCommand();
-			printTuple(&t);
+			try {
+				parse->parseCommand();
+			} catch (const char * str) {
+				std::cout << str << std::endl;
+			}
 		}
 	}
 };

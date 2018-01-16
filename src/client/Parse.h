@@ -3,75 +3,95 @@
 
 #include "Scan.h"
 #include "../shared/linda/tuple.h"
+#include "../shared/linda/tupleTemplate.h"
+
+
+typedef struct TupleOrTemplate // Union? struct? *?
+{
+	TupleTemplate tt;
+	tuple t;
+	TupleOrTemplate (TupleTemplate tt_): tt(tt_) {}
+	TupleOrTemplate (tuple t_): t(t_) {}
+	TupleOrTemplate () {}
+} TupleOrTemplate;
+
+class Command {
+public:
+	Atom cmd;
+	TupleOrTemplate tupleUnion;
+	Command(Atom a, TupleOrTemplate t): cmd(a), tupleUnion(t) {}
+	Command(Atom a): cmd(a) {}
+};
+
+
 
 class Parse {
 private:
 	Scan *scan;
-	Atom curToken;
+	Token curToken;
 
-	bool accept(Atom at) 
+	Atom accept(Atom at) 
 	{
-		if (curToken == at) 
+		std::cout << curToken.atom  << "accept\n";
+		if (curToken.atom == at) 
 		{
-			curToken = scan->nextToken();
-			return true;
-		} 
-		return false;
+			nextToken();
+			return at;
+		}
+		return null;
+	}
+
+	void nextToken() {
+		curToken = scan->nextToken();
+		std::cout << "nextToken " << curToken.atom << std::endl;
 	}
 
 
 public:
-	Parse() {
+	Parse() 
+	{
 		scan = new Scan();
 	}
 
-	~Parse() {
+	~Parse() 
+	{
 		delete scan;
 	}
 
-	tuple parseError() {
-		std::cout << "Błąd w poleceniu. Spróbuj ponownie\n";
-		return makeTuple("");
-	}
 
-	tuple parseCommand() {
-		std::string types = "";
+	Command parseCommand() 
+	{
 		scan->nextLine();
-		curToken = scan->nextToken();
-		if (!accept(output) && !accept(input) && !accept(read)) {
-			return parseError();
+		nextToken();
+		Atom at = null;
+		if ((at = accept(output)) == null)
+			if (((at = accept(input)) == null))
+				if ((at = accept(read)) == null)
+			throw "Dopuszczalne polecenia: input, output, read";
+		if (accept(lBracket) == null) 
+			throw "Oczekwano znaku (";
+
+		// TupleOrTemplate tUnion;
+		// switch (at) 
+		// {
+		// 	case output:
+		// 		// try {
+		// 		// 	tUnion.t = parseTuple();
+		// 		// } catch (const char* msg) {
+		// 		// 	std::cout << msg << std::endl;
+		// 		// 	return parseError();
+		// 		// }
+		// 		break;
+		// 	case input:
+		// 	case read:
+		// 	default:
+		// 	 	break;
+		// }
+		if (accept(rBracket) == null) {
+			throw "Oczekwano znaku )";
 		}
-		if (!accept(lBracket)) {
-			return parseError();
-		}
-		
-		while (true) 
-		{
-			if (!accept(string) && !accept(integer)) {
-				return parseError();
-			}
-			if (!accept(colonOp)) {
-				return parseError();
-			}
-			if (!accept(greaterThan) && !accept(greaterEqual) &&
-				!accept(lessThan) && !accept(lessEqual) &&
-				!accept(notEqual) && !accept(equals) &&
-				!accept(intConst) && !accept(stringConst) && 
-				!accept(starOp)) {
-				return parseError();
-			}
-			if (!accept(commaOp)) {
-				break;
-			}
-		}
-		if (!accept(rBracket))
-			std::cout << "Błąd w poleceniu. Spróbuj ponownie\n";
-		return makeTuple("si", "lol", 1, "xD");
+		return Command(at);
 	}
-
-	// tuple parseTupleTemplate() {
-
-	// }
 };
 
 #endif
