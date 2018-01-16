@@ -30,6 +30,15 @@ enum Atom {
 	endl			//19
 };
 
+class Token
+{
+public:
+	Atom atom;
+	std::string value;
+	Token(Atom at): atom(at) {};
+	Token(Atom at, std::string val): atom(at), value(val) {};
+	Token() {};
+};
 
 
 class Keywords {
@@ -38,7 +47,7 @@ private:
 	Map keywords;
 public:
 	Keywords();
-	
+
 	Atom find(std::string str) 
 	{
 		for (size_t i = 0; i != keywords.size(); ++i)
@@ -56,46 +65,46 @@ private:
 	char curChar;
 	Keywords *kwords;
 
-	Atom scanKword() 
+	Token scanKword() 
 	{
 		std::string str = ""; 
 		while ((curChar != -1) && isLetter(curChar)) {
 			str += curChar;
 			curChar = src->nextChar();
 		}
-		return kwords->find(str);
+		return Token(kwords->find(str));
 	}
 
-	Atom scanNumber() 
+	Token scanNumber() 
 	{
 		if (curChar == '0') {
 			curChar = src->nextChar();
 			if (isDigit(curChar))
-				return null;
-			return intConst;
+				throw "Wiele zer wiodących";
+			return Token(intConst, 0);
 		}
-		int i = 0;
+		std::string i = "";
 		while ((curChar != -1) && isDigit(curChar))
 		{
-			i = 10*i + curChar;
+			i += curChar;
 			curChar = src->nextChar();
 		}
-		return intConst;
+		return Token(intConst, i);
 	}
 
-	Atom scanStringConst(char qMark) // na "
+	Token scanStringConst(char qMark) // na "
 	{
 		std::string str = ""; 
 		curChar = src->nextChar();
 		while (curChar != qMark)
 		{
 			if (curChar == -1) 
-				return null;
+				throw "Niezakończony string";
 			str += curChar;
 			curChar = src->nextChar();
 		}
 		curChar = src->nextChar();
-		return stringConst;
+		return Token(stringConst, str);
 	}
 
 	bool isLetter(char i) 
@@ -137,13 +146,13 @@ public:
 		curChar = src->nextChar();
 	}
 
-	Atom nextToken() 
+	Token nextToken() 
 	{
 		do {
 			while (isWhitespace(curChar)) 
 				curChar = src->nextChar();
 			if (curChar == -1) // EOF
-				return endl;
+				return Token(endl);
 		} while (isWhitespace(curChar));
 		if (isLetter(curChar))
 			return scanKword();
@@ -154,49 +163,49 @@ public:
 			return scanStringConst(curChar);
 		case '(': 
 			curChar = src->nextChar();
-			return lBracket;
+			return Token(lBracket);
 		case ')': 
 			curChar = src->nextChar();
-			return rBracket;
+			return Token(rBracket);
 		case ':': 
 			curChar = src->nextChar();
-			return colonOp;
+			return Token(colonOp);
 		case ',': 
 			curChar = src->nextChar();
-			return commaOp;
+			return Token(commaOp);
 		case '>':
 			curChar = src->nextChar();
 			if (curChar == '=') {
 				curChar = src->nextChar();
-				return greaterEqual;
+				return Token(greaterEqual);
 			}
-			return greaterThan;
+			return Token(greaterThan);
 		case '<':
 			curChar = src->nextChar();
 			if (curChar == '=') {
 				curChar = src->nextChar();
-				return lessEqual;
+				return Token(lessEqual);
 			}
-			return lessThan;
+			return Token(lessThan);
 		case '=':
 			curChar = src->nextChar();
 			if (curChar == '=') {
 				curChar = src->nextChar();
-				return equals;
+				return Token(equals);
 			}
-			return null;
+			throw "Po znaku = oczekiwano =";
 		case '!':
 			curChar = src->nextChar();
 			if (curChar == '=') {
 				curChar = src->nextChar();
-				return notEqual;
+				return Token(notEqual);
 			}
-			return null;
+			throw "Po znaku ! oczekiwano =";
 		case '*':
 			curChar = src->nextChar();
-			return starOp;
+			return Token(starOp);
 		}
-		return null;
+		return Token(null);
 	}
 };
 
