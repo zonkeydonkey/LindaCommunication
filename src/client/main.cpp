@@ -12,7 +12,11 @@ Client *client;
 int main()
 {
 	client = new Client();
-    while (client->dispatchCommand()) {};
+	
+	client->run();
+
+	delete client;
+
     return 0;
 }
 
