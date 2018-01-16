@@ -13,11 +13,13 @@
 #include <stdio.h>
 #include <memory>
 #include <iostream>
+#include <cstring>
 
 #include "FileWorker.h"
 #include "../shared/utils/confFile.h"
 #include "../shared/messages/outputMessage.h"
 #include "../shared/messages/shared.h"
+#include "messages/fileRequestMessage.h"
 
 class Server
 {
@@ -32,6 +34,9 @@ protected:
     int requestFileQueueId;
     int responseFileQueueId;
     std::string tupleSpaceFile;
+
+    size_t inputMessageMaxSize;
+    size_t outputMessageMaxSize;
 
     volatile bool running = true;
 
@@ -49,6 +54,9 @@ public:
 
 private:
     int createMessageQueue (key_t key);
+
+protected:
+    void processOutputMessage(OutputMessage &message);
 };
 
 #endif //LINDACOMMUNICATION_SERVER_H

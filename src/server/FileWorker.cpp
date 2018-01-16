@@ -8,8 +8,34 @@ FileWorker::FileWorker(int _requestFileQueueId, int _responseFileQueueId, const 
 FileWorker::~FileWorker()
 {}
 
-void FileWorker::receiveMessage()
+int FileWorker::receiveMessage()
 {
-    std::cout << "FileWorker: wait for request" << std::endl;
-    //if(msgrcv(requestFileQueueId, &fileRequestMessage, sizeof()))
+    FileRequestMessage msg;
+    if(msgrcv(requestFileQueueId, &msg, sizeof(msg), 0, 0) < 0)
+    {
+        perror("File Worker - message receiving error: ");
+        return -1;
+    }
+    std::cout << "File Worker Thread received message." << std::endl;
+
+    switch(msg.operation)
+    {
+        case Output:
+        {
+            std::cout << "output" << std::endl;
+            break;
+        }
+        case Input:
+        {
+            std::cout << "input" << std::endl;
+            break;
+        }
+        case Read:
+        {
+            std::cout << "read" << std::endl;
+            break;
+        }
+    }
+
+    return 0;
 }
