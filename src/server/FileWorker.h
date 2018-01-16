@@ -7,6 +7,7 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <pthread.h>
+#include <errno.h>
 #include "messages/fileRequestMessage.h"
 #include "messages/fileResponseMessage.h"
 
@@ -20,7 +21,7 @@ public:
     FileWorker(int, int, std::string);
     ~FileWorker();
 
-    void receiveMessage();
+    int receiveMessage();
 };
 
 #endif //LINDACOMMUNICATION_FILEWORKER_H
