@@ -4,9 +4,9 @@
 
 #include "server.h"
 
-const std::string Server::sharedConfFilename = "../../src/shared/conf/queue.conf";
-const std::string Server::serverConfFilename = "../../src/server/conf/queue.conf";
-const std::string Server::tupleSpaceConfFilename = "../../src/server/conf/tupleSpace.conf";
+const std::string Server::sharedConfFilename = "../LindaCommunication/src/shared/conf/queue.conf";
+const std::string Server::serverConfFilename = "../LindaCommunication/src/server/conf/queue.conf";
+const std::string Server::tupleSpaceConfFilename = "../LindaCommunication/src/server/conf/tupleSpace.conf";
 
 Server::Server()
 {
@@ -163,7 +163,6 @@ void * inputQueueThreadHandler (void * arg)
     {
         if (msgrcv(server->inputQueueId, &inputMessage, INPUT_MESSAGE_MAX_SIZE, HIGHEST_PRIORITY, IPC_NOWAIT) >= 0)
         {
-            std::cout << "high prior" << std::endl;
             server->processHighPriorityInput(inputMessage);
         }
         else
@@ -206,7 +205,8 @@ void *fileWorkerThreadHandler (void * server)
                                             servPtr->tupleSpaceFile);
     while(servPtr->running)
     {
-        fileWorker->receiveMessage();
+        if (fileWorker->receiveMessage() == -1)
+            servPtr->stop();
     }
 
     delete fileWorker;
@@ -215,11 +215,11 @@ void *fileWorkerThreadHandler (void * server)
 
 void Server::run ()
 {
-    pthread_t inputThread;
+    pthread_t inputMessagesThread;
     pthread_t outputMessagesThread;
     pthread_t fileWorkerThread;
 
-    if(pthread_create(&inputThread, nullptr, &inputQueueThreadHandler, this)) {
+    if(pthread_create(&inputMessagesThread, nullptr, &inputQueueThreadHandler, this)) {
         std::cerr << "Error creating input messages thread\n";
         return;
     }
@@ -234,7 +234,7 @@ void Server::run ()
         return;
     }
 
-    pthread_join(inputThread, nullptr);
+    pthread_join(inputMessagesThread, nullptr);
     pthread_join(outputMessagesThread, nullptr);
     pthread_join(fileWorkerThread, nullptr);
 }

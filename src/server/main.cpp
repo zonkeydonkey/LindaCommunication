@@ -4,15 +4,12 @@
 
 #include <iostream>
 #include <signal.h>
-
 #include "server.h"
-#include "../shared/linda/tuple.h"
 
 Server * server;
 
 void interruptHandler(int signum)
 {
-    // na razie
     server->stop();
 }
 
