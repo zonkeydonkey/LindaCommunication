@@ -15,6 +15,7 @@ typedef struct FileRequestMessage
     TupleTemplate tupleTemplate;
     FileOperation operation;
     char tuple [MAX_TUPLE_SIZE];
+    unsigned tupleBufferBytes;
 } FileRequestMessage;
 
 #endif //LINDACOMMUNICATION_FILEREQUESTMESSAGE_H

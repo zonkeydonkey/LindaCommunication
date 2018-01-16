@@ -49,7 +49,7 @@ void printTuple(tuple *tuple);
     To serialize provided tuple.
     Returns count of elements that have been serialized or -1, in case of error.
 */
-int serializeTuple(const tuple *tuple, char *buffer, int size);
+int serializeTuple(const tuple *tuple, char *buffer, int *size);
 /*
     To deserialize tuple.
 */
