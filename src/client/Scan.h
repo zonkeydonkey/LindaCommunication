@@ -81,7 +81,7 @@ private:
 			curChar = src->nextChar();
 			if (isDigit(curChar))
 				throw "Wiele zer wiodących";
-			return Token(intConst, 0);
+			return Token(intConst, "0");
 		}
 		std::string i = "";
 		while ((curChar != -1) && isDigit(curChar))

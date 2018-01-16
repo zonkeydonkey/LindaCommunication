@@ -21,6 +21,7 @@ public:
 	TupleOrTemplate tupleUnion;
 	Command(Atom a, TupleOrTemplate t): cmd(a), tupleUnion(t) {}
 	Command(Atom a): cmd(a) {}
+	Command() {}
 };
 
 
@@ -32,7 +33,6 @@ private:
 
 	Atom accept(Atom at) 
 	{
-		std::cout << curToken.atom  << "accept\n";
 		if (curToken.atom == at) 
 		{
 			nextToken();
@@ -43,7 +43,6 @@ private:
 
 	void nextToken() {
 		curToken = scan->nextToken();
-		std::cout << "nextToken " << curToken.atom << std::endl;
 	}
 
 
@@ -71,26 +70,74 @@ public:
 		if (accept(lBracket) == null) 
 			throw "Oczekwano znaku (";
 
-		// TupleOrTemplate tUnion;
-		// switch (at) 
-		// {
-		// 	case output:
-		// 		// try {
-		// 		// 	tUnion.t = parseTuple();
-		// 		// } catch (const char* msg) {
-		// 		// 	std::cout << msg << std::endl;
-		// 		// 	return parseError();
-		// 		// }
-		// 		break;
-		// 	case input:
-		// 	case read:
-		// 	default:
-		// 	 	break;
-		// }
+		TupleOrTemplate tUnion;
+		switch (at) 
+		{
+			case output:
+				tUnion.t = parseTuple();
+				break;
+			case input:
+			case read:
+				tUnion.t = parseTuple();
+			default:
+			 	break;
+		}
 		if (accept(rBracket) == null) {
 			throw "Oczekwano znaku )";
 		}
-		return Command(at);
+		return Command(at, tUnion);
+	}
+
+
+	tuple parseTuple() 
+	{
+		std::string types = "";
+		std::vector<std::string> values;
+		unsigned elemNum = 0;
+		while (true) 
+		{
+			Atom typ = null;
+			if (((typ = accept(string)) == null) &&
+				((typ = accept(integer)) == null)) {
+				if (elemNum == 0 && curToken.atom == rBracket)
+					return makeTuple("");
+				throw "Dopuszczalne typy elementów krotki - string, integer";
+			}
+			switch (typ) {
+				case string: 
+					types += "s";
+					break;
+				case integer:
+					types += "i";
+					break;
+				default: 
+					break;
+			}
+			if (accept(colonOp) == null) {
+				throw "Nie znaleziono znaku :";
+			}
+
+			Token val = curToken;
+			switch (typ) {
+				case string: 
+					if (val.atom != stringConst)
+						throw "Nie znaleziono stałej typu string";
+					break;
+				case integer:
+					if (val.atom != intConst)
+						throw "Nie znaleziono stałej typu integer";
+					break;
+				default: 
+					break;
+			}
+			values.push_back(val.value);
+			nextToken();
+			elemNum++;
+			if (accept(commaOp) == null) {
+				break;
+			}
+		}
+		return makeTuple("");
 	}
 };
 
