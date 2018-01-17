@@ -14,7 +14,6 @@ typedef struct ResponseMessage
     long PID;
     ResponseError errorCode;
     char tuple [TUPLE_MAX_SIZE];
-
 } ResponseMessage;
 
 #endif //LINDACOMMUNICATION_RESPONSEMESSAGE_H

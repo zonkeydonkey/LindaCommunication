@@ -21,24 +21,32 @@ class Client {
     int outputQueueId;
     int responseQueueId;
 
+    int readResponseMessage() 
+    {
+    	ResponseMessage message;
+		if (msgrcv(responseQueueId, &message, sizeof(message), getpid(), MSG_NOERROR) < 0)
+		{
+			perror("Błąd - nie udało się pobrać krotki zgodnej ze wzorcem :");
+			return -1;
+		}
+		tuple t = deserializeTuple(message.tuple);
+		printTuple(&t);
+		return 0;
+    }
 
 	int readOrInputMessage(Atom commandType, TupleTemplate templ, time_t timeout) 
 	{
 		InputMessage message;
 		message.PID = getpid();
-	    //message.mtype = ((commandType == readInstr) ? 1 : 0);
 		message.tupleTemplate = templ;
-		message.isRead = false;
+		message.isRead = (commandType == readInstr);
 		message.timeout = timeout;
 	    if (msgsnd(inputQueueId, &message, sizeof(message), IPC_NOWAIT) < 0)
 	    {
-	        perror("Błąd - krotka nie została umieszczona w przestrzeni krotek");
+	        perror("Błąd - wzór krotki nie został umieszczony w przestrzeni: ");
 	        return -1;
 	    }
-	    std::cout << "Krotka umieszczona w przestrzeni\n";
-
-	    // msgrcv
-
+	    readResponseMessage();
 	    return 0;
 	}
 public:
@@ -93,10 +101,9 @@ public:
 	    message.PID = getpid();
 	    if (msgsnd(outputQueueId, &message, sizeof(message), IPC_NOWAIT) < 0)
 	    {
-	        perror("Błąd - krotka nie została umieszczona w przestrzeni krotek");
+	        perror("Błąd - krotka nie została umieszczona w przestrzeni krotek :");
 	        return -1;
 	    }
-	    std::cout << "Krotka umieszczona w przestrzeni\n";
 	    return 0;
 	}
 
