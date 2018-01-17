@@ -146,11 +146,11 @@ const char *FileWorker::readFromFile()
     if(file.is_open())
     {
         file.seekg(filePos);
-        if(file.eof())
-            return NULL;
         std::string tupleBuffer;
         std::getline(file, tupleBuffer);
         int currPos = file.tellg();
+        if(currPos == -1)
+            return NULL;
         readedTupleBytesCount = currPos - filePos - 1;
         filePos = currPos;
         file.close();
