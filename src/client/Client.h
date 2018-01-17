@@ -20,6 +20,27 @@ class Client {
 	int inputQueueId;
     int outputQueueId;
     int responseQueueId;
+
+
+	int readOrInputMessage(Atom commandType, TupleTemplate templ, time_t timeout) 
+	{
+		InputMessage message;
+		message.PID = getpid();
+	    //message.mtype = ((commandType == readInstr) ? 1 : 0);
+		message.tupleTemplate = templ;
+		message.isRead = false;
+		message.timeout = timeout;
+	    if (msgsnd(inputQueueId, &message, sizeof(message), IPC_NOWAIT) < 0)
+	    {
+	        perror("Błąd - krotka nie została umieszczona w przestrzeni krotek");
+	        return -1;
+	    }
+	    std::cout << "Krotka umieszczona w przestrzeni\n";
+
+	    // msgrcv
+
+	    return 0;
+	}
 public:
 	Client()
 	{
@@ -33,35 +54,35 @@ public:
 		delete parse;
 	}
 
-int init()
-{
-    try
-    {
-        std::shared_ptr<ConfFile> sharedConf = std::make_shared<ConfFile> (sharedConfFilename);
-        std::string inputQueId = sharedConf->getProperty("input");
-        std::string outputQueId = sharedConf->getProperty("output");
-        std::string responseQueId = sharedConf->getProperty("response");
-        inputQueueId = openMessageQueue (std::stoi(inputQueId));
-        outputQueueId = openMessageQueue (std::stoi(outputQueId));
-        responseQueueId = openMessageQueue (std::stoi(responseQueId));
-    }
-    catch (char const* ex)
-    {
-        std::cerr << ex << std::endl;
-        return -1;
-    }
-    return 0;
-}
+	int init()
+	{
+	    try
+	    {
+	        std::shared_ptr<ConfFile> sharedConf = std::make_shared<ConfFile> (sharedConfFilename);
+	        std::string inputQueId = sharedConf->getProperty("input");
+	        std::string outputQueId = sharedConf->getProperty("output");
+	        std::string responseQueId = sharedConf->getProperty("response");
+	        inputQueueId = openMessageQueue (std::stoi(inputQueId));
+	        outputQueueId = openMessageQueue (std::stoi(outputQueId));
+	        responseQueueId = openMessageQueue (std::stoi(responseQueId));
+	    }
+	    catch (char const* ex)
+	    {
+	        std::cerr << ex << std::endl;
+	        return -1;
+	    }
+	    return 0;
+	}
 
-int openMessageQueue (key_t key)
-{
-    int result = msgget (key, QUEUE_PERMS );
-    if (result < 0)
-    {
-        throw "Operacja otwierania kolejki nie powiodła się";
-    }
-    return result;
-}
+	int openMessageQueue (key_t key)
+	{
+	    int result = msgget (key, QUEUE_PERMS );
+	    if (result < 0)
+	    {
+	        throw "Operacja otwierania kolejki nie powiodła się";
+	    }
+	    return result;
+	}
 
 	int outputMessage(tuple toSave)
 	{
@@ -79,14 +100,15 @@ int openMessageQueue (key_t key)
 	    return 0;
 	}
 
-	void inputMessage(TupleTemplate templ, int itmeout)
-	{
 
+	void readMessage(TupleTemplate templ, time_t timeout)
+	{
+		readOrInputMessage(readInstr, templ, timeout);
 	}
 
-	void readMessage(TupleTemplate templ, int itmeout)
+	void inputMessage(TupleTemplate templ, time_t timeout)
 	{
-
+		readOrInputMessage(input, templ, timeout);
 	}
 
 	void run()
@@ -102,6 +124,7 @@ int openMessageQueue (key_t key)
 						break;
 					case input:
 					case readInstr:
+						readOrInputMessage(cmd.cmd, cmd.tupleUnion.tt, 0);
 						break;
 					default:
 						break;

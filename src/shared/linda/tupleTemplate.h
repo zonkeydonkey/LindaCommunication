@@ -68,6 +68,10 @@ typedef struct TupleTemplate
                 numbers[num_i++].print();
         }
     }
+    TupleTemplate() {
+        numberNb = 0;
+        textNb = 0;
+    }
 } TupleTemplate;
 
 #endif //LINDACOMMUNICATION_TUPLE_H

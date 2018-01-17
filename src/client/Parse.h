@@ -47,7 +47,6 @@ public:
 	TupleTemplate parseTupleTemplate() 
 	{
 		TupleTemplate tuplTemp;
-		tuplTemp.print();
 		unsigned elemNum = 0;
 		while (true) 
 		{
