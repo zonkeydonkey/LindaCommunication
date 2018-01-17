@@ -5,9 +5,9 @@
 #include "server.h"
 
 // LindaCommunication
-const std::string Server::sharedConfFilename = "../../src/shared/conf/queue.conf";
-const std::string Server::serverConfFilename = "../../src/server/conf/queue.conf";
-const std::string Server::tupleSpaceConfFilename = "../../src/server/conf/tupleSpace.conf";
+const std::string Server::sharedConfFilename = "../LindaCommunication/src/shared/conf/queue.conf";
+const std::string Server::serverConfFilename = "../LindaCommunication/src/server/conf/queue.conf";
+const std::string Server::tupleSpaceConfFilename = "../LindaCommunication/src/server/conf/tupleSpace.conf";
 
 Server::Server()
 {
@@ -287,7 +287,7 @@ void Server::processOutputMessage(OutputMessage &message)
     fileRequest.operation = Output;
     memcpy(fileRequest.tuple, message.tuple, sizeof(message.tuple));
     fileRequest.PID = message.PID;
-    //fileRequest.tupleSize = (unsigned int) strlen(message.tuple);
+    fileRequest.tupleSize = message.originalSize;
 
     if (msgsnd(requestFileQueueId, &fileRequest, sizeof(fileRequest) - sizeof(long), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to send request to file worker has failed. Operation: output, tuple: "
