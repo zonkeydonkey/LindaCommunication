@@ -17,8 +17,6 @@ enum Operator {Any, Equals, Less, LessOrEquals, Greater, GreaterOrEquals};
 typedef struct NumberTemplate
 {
     Operator tempOp;
-    int from;
-    int to;
     int value;
     int order;
 } NumberTemplate;
