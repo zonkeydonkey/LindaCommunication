@@ -21,14 +21,14 @@ class Client {
     int outputQueueId;
     int responseQueueId;
 public:
-	Client() 
+	Client()
 	{
 		if (init() != 0)
-			throw "Inicjalizacja środowieska nie powiodła się";
+			throw "Inicjalizacja środowiska nie powiodła się";
 		parse = new Parse();
 	}
 
-	~Client() 
+	~Client()
 	{
 		delete parse;
 	}
@@ -63,12 +63,12 @@ int openMessageQueue (key_t key)
     return result;
 }
 
-	int outputMessage(tuple toSave) 
+	int outputMessage(tuple toSave)
 	{
 		OutputMessage message;
 	    int size = TUPLE_MAX_SIZE;
-	    size_t sizeBytes = serializeTuple(&toSave, message.tuple, &size);
-	    message.originalSize = sizeBytes;
+	    serializeTuple(&toSave, message.tuple, &size);
+	    message.originalSize = TUPLE_MAX_SIZE - size;
 	    message.PID = getpid();
 	    if (msgsnd(outputQueueId, &message, sizeof(message), IPC_NOWAIT) < 0)
 	    {
@@ -89,13 +89,13 @@ int openMessageQueue (key_t key)
 
 	}
 
-	void run() 
+	void run()
 	{
 		while (true)
 		{
 			try {
 				Command cmd = parse->parseCommand();
-				switch (cmd.cmd) 
+				switch (cmd.cmd)
 				{
 					case output:
 						outputMessage(cmd.tupleUnion.t);
