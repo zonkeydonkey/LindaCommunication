@@ -12,11 +12,11 @@
 
 #define MAX_ELEMENTS 10
 
-enum NumberOperator {Equals, Less, LessOrEquals, Greater, GreaterOrEquals};
+enum Operator {Any, Equals, Less, LessOrEquals, Greater, GreaterOrEquals};
 
 typedef struct NumberTemplate
 {
-    NumberOperator numberOperator;
+    Operator tempOp;
     int from;
     int to;
     int value;
@@ -25,10 +25,12 @@ typedef struct NumberTemplate
 
 typedef struct TextTemplate
 {
+    Operator tempOp;
     char value[MAX_TEXT_SIZE];
     int order;
-    void setValues(int o, std::string val)
+    void setValues(Operator op, int o, std::string val)
     {
+        tempOp = op;
         order = o;
         strcpy(value, val.c_str());
     }
