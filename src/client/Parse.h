@@ -41,6 +41,21 @@ private:
 		return null;
 	}
 
+	Atom relOp() {
+		if (curToken.atom == greaterThan ||
+			curToken.atom == greaterEqual ||
+			curToken.atom == lessThan ||
+			curToken.atom == lessEqual ||
+			curToken.atom == notEqual ||
+			curToken.atom == equals)
+		{
+			Atom at = curToken.atom;
+			nextToken();
+			return at;
+		}
+		return null;
+	}
+
 	void nextToken() {
 		curToken = scan->nextToken();
 	}
@@ -78,7 +93,8 @@ public:
 				break;
 			case input:
 			case read:
-				tUnion.t = parseTuple();
+				tUnion.tt = parseTupleTemplate();
+				break;
 			default:
 			 	break;
 		}
@@ -138,6 +154,77 @@ public:
 			}
 		}
 		return makeTuple("");
+	}
+
+	TupleTemplate parseTupleTemplate() 
+	{
+		TupleTemplate tuplTemp;
+		unsigned elemNum = 0;
+		while (true) 
+		{
+			Atom typ = null;
+			if (((typ = accept(string)) == null) &&
+				((typ = accept(integer)) == null)) {
+				if (elemNum == 0 && curToken.atom == rBracket)
+					return tuplTemp;
+				throw "Dopuszczalne typy elementów krotki - string, integer";
+			}
+			if (accept(colonOp) == null) {
+				throw "Nie znaleziono znaku :";
+			}
+
+			Atom op;
+			switch (typ) 
+			{
+				case string: 
+					if (accept(starOp) != null) {
+						tuplTemp.texts[tuplTemp.textNb].setValues(elemNum, "*");
+						tuplTemp.textNb++;
+						break;
+					}
+					if ((op = relOp()) != null) {
+						if (curToken.atom != stringConst)
+							throw "Po operatorze porównania nie znaleziono stałej typu string";
+						// else znowu setvalues
+						nextToken();
+						tuplTemp.textNb++;
+						break;
+					}
+					if (curToken.atom == stringConst) {
+						//tuplTemp.texts[tuplTemp.textNb].setValues(elemNum, curToken.value);
+						
+						nextToken();
+						tuplTemp.textNb++;
+						break;
+					}
+					throw "Nie znaleziono ograniczeń dla pozycji";
+				case integer:
+					if ((op = relOp()) != null) {
+						if (curToken.atom != intConst)
+							throw "Po operatorze porównania nie znaleziono stałej typu integer";
+						
+						// iiiii setvalues
+						nextToken();
+						tuplTemp.numberNb++;
+						break;
+					}
+					if (curToken.atom == intConst) {
+						
+						nextToken();
+						tuplTemp.numberNb++;
+						break;
+					}						
+					throw "Nie znaleziono ograniczeń dla pozycji";
+				default:
+					break;
+			}
+
+			elemNum++;
+			if (accept(commaOp) == null) {
+				break;
+			}
+		}
+		return tuplTemp;
 	}
 };
 
