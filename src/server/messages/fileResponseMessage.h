@@ -8,7 +8,7 @@
 #include "../../shared/linda/tuple.h"
 #include "../../shared/messages/shared.h"
 
-enum FileResponseError {TupleNotFound = -1, FileResponseOK = 0};
+enum FileResponseError {InputError = -3, OutputError = -2, TupleNotFound = -1, FileResponseOK = 0};
 enum ThreadID {Out, In};
 
 typedef struct FileResponseMessage

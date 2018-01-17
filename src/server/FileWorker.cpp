@@ -11,7 +11,7 @@ FileWorker::~FileWorker()
 int FileWorker::receiveMessage()
 {
     FileRequestMessage msg;
-    if(msgrcv(requestFileQueueId, &msg, sizeof(msg), 0, 0) < 0)
+    if(msgrcv(requestFileQueueId, &msg, sizeof(msg) - sizeof(long), 0, 0) < 0)
     {
         perror("File Worker - message receiving error: ");
         return -1;
@@ -22,57 +22,111 @@ int FileWorker::receiveMessage()
     {
         case Output:
         {
-            if(printToFile(msg.tuple, msg.tupleBufferBytes) == -1)
-            {
-                std::cout << "File Worker - cannot save tuple in the tuple space" << std::endl;
-                // wyslanie komunikatu o bledzie
-            }
-            // wyslanie komunikatu ze sie udalo
-            break;
+            return outputService(&msg);
         }
         case Input:
         {
-            unsigned idx;
-            const char *tupleBuffer;
-            while((tupleBuffer = readFromFile(idx)) != NULL)
-            {
-                tuple deserializedTuple = deserializeTuple(tupleBuffer);
-                // porównanie z templatem
-                if(true)
-                {
-                    // wyslanie komunikatu
-                    return 0;
-                }
-                ++idx;
-            }
-            // nie znaleziono krotki wiec odsylamy nulla
-            break;
+            return inputService(&msg);
         }
         case Read:
         {
-            unsigned idx;
-            const char *tupleBuffer;
-            while((tupleBuffer = readFromFile(idx)) != NULL)
+            return readService(&msg);
+        }
+    }
+    std::cout << "File Worker - Unknown operation" << std::endl;
+    return -1;
+}
+
+int FileWorker::outputService(FileRequestMessage *msg)
+{
+    FileResponseMessage resMsg;
+    resMsg.threadID = Out;
+    if(printToFile(msg->tuple, msg->tupleBufferBytes) == -1)
+    {
+        std::cout << "File Worker - cannot save tuple in the tuple space" << std::endl;
+        resMsg.errorCode = OutputError;
+    }
+    else
+        resMsg.errorCode = FileResponseOK;
+    if (msgsnd(responseFileQueueId, &resMsg, sizeof(resMsg), IPC_NOWAIT) < 0)
+    {
+        perror("File Worker - message sending error: ");
+        return -1;
+    }
+    printSendMsgInfo(&resMsg);
+    return 0;
+}
+
+int FileWorker::inputService(FileRequestMessage *msg)
+{
+    FileResponseMessage resMsg;
+    const char *tupleBuffer;
+    resMsg.threadID = In;
+    while((tupleBuffer = readFromFile()) != NULL)
+    {
+        tuple deserializedTuple = deserializeTuple(tupleBuffer);
+        // porównanie z templatem
+        if(true)
+        {
+            if(removeTupleFromFile() == 0)
             {
-                tuple deserializedTuple = deserializeTuple(tupleBuffer);
-                // porównanie z templatem
-                if(true)
-                {
-                    // wyslanie komunikatu
-                    return 0;
-                }
-                ++idx;
+                memcpy(resMsg.tuple, tupleBuffer, readedTupleBytesCount);
+                resMsg.errorCode = FileResponseOK;
             }
-            // nie znaleziono krotki wiec odsylamy nulla
+            else
+                resMsg.errorCode = InputError;
             break;
         }
     }
+    if(tupleBuffer == NULL)
+    {
+        resMsg.errorCode = TupleNotFound;
+    }
+    filePos = 0;
+    readedTupleBytesCount = 0;
+    if (msgsnd(responseFileQueueId, &resMsg, sizeof(resMsg), IPC_NOWAIT) < 0)
+    {
+        perror("File Worker - message sending error: ");
+        return -1;
+    }
+    printSendMsgInfo(&resMsg);
+    return 0;
+}
+
+int FileWorker::readService(FileRequestMessage *msg)
+{
+    FileResponseMessage resMsg;
+    const char *tupleBuffer;
+    resMsg.threadID = In;
+    while((tupleBuffer = readFromFile()) != NULL)
+    {
+        tuple deserializedTuple = deserializeTuple(tupleBuffer);
+        // porównanie z templatem
+        if(true)
+        {
+            memcpy(resMsg.tuple, tupleBuffer, readedTupleBytesCount);
+            resMsg.errorCode = FileResponseOK;
+            break;
+        }
+    }
+    if(tupleBuffer == NULL)
+    {
+        resMsg.errorCode = TupleNotFound;
+    }
+    filePos = 0;
+    readedTupleBytesCount = 0;
+    if (msgsnd(responseFileQueueId, &resMsg, sizeof(resMsg), IPC_NOWAIT) < 0)
+    {
+        perror("File Worker - message sending error: ");
+        return -1;
+    }
+    printSendMsgInfo(&resMsg);
     return 0;
 }
 
 int FileWorker::printToFile(char *tupleBuffer, unsigned bytesCount)
 {
-    const char* tupleSpaceFilename = tupleSpaceFile.c_str();
+    const char *tupleSpaceFilename = tupleSpaceFile.c_str();
     std::ofstream file(tupleSpaceFilename, std::ofstream::app | std::ofstream::binary);
     if(file.is_open())
     {
@@ -85,22 +139,20 @@ int FileWorker::printToFile(char *tupleBuffer, unsigned bytesCount)
         return -1;
 }
 
-const char *FileWorker::readFromFile(unsigned idx)
+const char *FileWorker::readFromFile()
 {
-    const char* tupleSpaceFilename = tupleSpaceFile.c_str();
+    const char *tupleSpaceFilename = tupleSpaceFile.c_str();
     std::ifstream file(tupleSpaceFilename, std::ofstream::in | std::ofstream::binary);
     if(file.is_open())
     {
-        unsigned i = 0;
-        while(i < idx)
-        {
-            file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            if(file.eof())
-                return NULL;
-            ++i;
-        }
+        file.seekg(filePos);
+        if(file.eof())
+            return NULL;
         std::string tupleBuffer;
         std::getline(file, tupleBuffer);
+        int currPos = file.tellg();
+        readedTupleBytesCount = currPos - filePos - 1;
+        filePos = currPos;
         file.close();
         return tupleBuffer.c_str();
     }
@@ -108,4 +160,79 @@ const char *FileWorker::readFromFile(unsigned idx)
     {
         return NULL;
     }
+}
+
+int FileWorker::removeTupleFromFile()
+{
+    const char *tupleSpaceFilename = tupleSpaceFile.c_str();
+    const char *tempFileName = "temp";
+    std::ifstream file(tupleSpaceFilename, std::ofstream::in | std::ofstream::binary);
+    std::ofstream tempFile(tempFileName, std::ofstream::out | std::ofstream::binary);
+    if(file.is_open() && tempFile.is_open())
+    {
+        file.seekg(filePos - 1 - readedTupleBytesCount);
+        std::string tupleBuffer;
+        std::getline(file, tupleBuffer);
+        file.seekg(0);
+        std::string currLine;
+        // when we have two the same tuple, we remove one
+        bool deletedLine = false;
+        while(getline(file, currLine))
+        {
+            if(currLine != tupleBuffer || deletedLine)
+            {
+                tempFile << currLine << "\n";
+            }
+            else
+                deletedLine = true;
+        }
+        file.close();
+        tempFile.close();
+        remove(tupleSpaceFilename);
+        rename(tempFileName, tupleSpaceFilename);
+        return 0;
+    }
+    return -1;
+}
+
+void FileWorker::printSendMsgInfo(FileResponseMessage *resMsg)
+{
+    std::cout << "File Worker - sended message:" << std::endl;
+    std::cout << "Type: " << resMsg->mtype;
+    std::cout << " | ThreadID: ";
+    switch(resMsg->threadID)
+    {
+        case Out:
+        {
+            std::cout << "Output";
+            break;
+        }
+        case In:
+        {
+            std::cout << "Input/Read";
+            break;
+        }
+        std::cout << std::endl;
+    }
+    //if(resMsg->tuple != NULL)
+        //std::cout << "Tuple: " << resMsg->tuple;
+    std::cout << " | ErrorCode: ";
+    switch(resMsg->errorCode)
+    {
+        case FileResponseOK:
+        {
+            std::cout << "OK";
+            break;
+        }
+        case TupleNotFound:
+        {
+            std::cout << "Tuple not found";
+            break;
+        }
+        case OutputError:
+        {
+            std::cout << "Output error";
+        }
+    }
+    std::cout << std::endl;
 }
