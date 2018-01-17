@@ -39,6 +39,7 @@ int FileWorker::receiveMessage()
 int FileWorker::outputService(FileRequestMessage *msg)
 {
     FileResponseMessage resMsg;
+    resMsg.PID = msg->PID;
     resMsg.threadID = Out;
     if(printToFile(msg->tuple, msg->tupleSize) == -1)
     {
@@ -60,6 +61,7 @@ int FileWorker::inputService(FileRequestMessage *msg)
 {
     FileResponseMessage resMsg;
     const char *tupleBuffer;
+    resMsg.PID = msg->PID;
     resMsg.threadID = In;
     while((tupleBuffer = readFromFile()) != NULL)
     {
@@ -95,6 +97,7 @@ int FileWorker::readService(FileRequestMessage *msg)
 {
     FileResponseMessage resMsg;
     const char *tupleBuffer;
+    resMsg.PID = msg->PID;
     resMsg.threadID = In;
     while((tupleBuffer = readFromFile()) != NULL)
     {
@@ -195,7 +198,7 @@ int FileWorker::removeTupleFromFile()
 void FileWorker::printSendMsgInfo(FileResponseMessage *resMsg)
 {
     std::cout << "File Worker - sended message:" << std::endl;
-    std::cout << "Type: " << resMsg->mtype;
+    std::cout << "Type: " << resMsg->PID;
     std::cout << " | ThreadID: ";
     switch(resMsg->threadID)
     {

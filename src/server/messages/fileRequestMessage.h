@@ -12,7 +12,7 @@ enum FileOperation {Read, Input, Output};
 
 typedef struct FileRequestMessage
 {
-    long mtype;
+    long PID;
     TupleTemplate tupleTemplate;
     FileOperation operation;
     char tuple [TUPLE_MAX_SIZE];

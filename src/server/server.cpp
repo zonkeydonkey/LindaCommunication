@@ -82,7 +82,7 @@ void Server::sendTimeoutedInfo(long PID)
 FileResponseMessage Server::tryFindTuple(InputMessage &inputMessage)
 {
     FileRequestMessage fileRequest;
-    fileRequest.mtype = inputMessage.PID;
+    fileRequest.PID = inputMessage.PID;
     fileRequest.tupleTemplate = inputMessage.tupleTemplate;
     fileRequest.operation = inputMessage.isRead ? Read : Input;
 
@@ -108,7 +108,7 @@ void Server::sendTupleFoundInfo (FileResponseMessage &fileResponseMessage)
     ResponseMessage responseMessage;
     std::memcpy(responseMessage.tuple, fileResponseMessage.tuple, strlen(fileResponseMessage.tuple));
     responseMessage.errorCode = ResponseError::ResponseOK;
-    responseMessage.mtype = fileResponseMessage.mtype;
+    responseMessage.mtype = fileResponseMessage.PID;
 
     if (msgsnd(responseQueueId, &responseMessage, sizeof(responseMessage), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to send response with tuple has failed. Process PID: " << responseMessage.mtype
@@ -121,7 +121,7 @@ void Server::sendBackTuple(FileResponseMessage &fileResponseMessage)
 {
     OutputMessage outputMessage;
     std::memcpy(outputMessage.tuple, fileResponseMessage.tuple, strlen(fileResponseMessage.tuple));
-    outputMessage.PID = fileResponseMessage.mtype;
+    outputMessage.PID = fileResponseMessage.PID;
 
     if (msgsnd(outputQueueId, &outputMessage, sizeof(outputMessage), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to resend message with tuple has failed. Process PID: " << outputMessage.PID
@@ -286,12 +286,12 @@ void Server::processOutputMessage(OutputMessage &message)
     FileRequestMessage fileRequest;
     fileRequest.operation = Output;
     memcpy(fileRequest.tuple, message.tuple, sizeof(message.tuple));
-    fileRequest.mtype = message.PID;
+    fileRequest.PID = message.PID;
     //fileRequest.tupleSize = (unsigned int) strlen(message.tuple);
 
     if (msgsnd(requestFileQueueId, &fileRequest, sizeof(fileRequest) - sizeof(long), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to send request to file worker has failed. Operation: output, tuple: "
-                  << fileRequest.tuple << ", process PID: " << fileRequest.mtype << std::endl;
+                  << fileRequest.tuple << ", process PID: " << fileRequest.PID << std::endl;
         stop();
     }
 }

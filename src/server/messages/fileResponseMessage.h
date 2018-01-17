@@ -13,7 +13,7 @@ enum ThreadID {Out, In};
 
 typedef struct FileResponseMessage
 {
-    long mtype;
+    long PID;
     ThreadID threadID;
     char tuple [TUPLE_MAX_SIZE];
     int errorCode;
