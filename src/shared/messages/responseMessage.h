@@ -11,7 +11,7 @@ enum ResponseError {Timeouted = -1, ResponseOK = 0};
 
 typedef struct ResponseMessage
 {
-    long mtype;
+    long PID;
     ResponseError errorCode;
     char tuple [TUPLE_MAX_SIZE];
 

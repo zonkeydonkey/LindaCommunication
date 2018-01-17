@@ -69,7 +69,7 @@ void Server::stop()
 void Server::sendTimeoutedInfo(long PID)
 {
     ResponseMessage response;
-    response.mtype = PID;
+    response.PID = PID;
     response.errorCode = Timeouted;
 
     if (msgsnd(responseQueueId, &response, sizeof(response) - sizeof(long), IPC_NOWAIT) < 0)
@@ -108,10 +108,10 @@ void Server::sendTupleFoundInfo (FileResponseMessage &fileResponseMessage)
     ResponseMessage responseMessage;
     std::memcpy(responseMessage.tuple, fileResponseMessage.tuple, strlen(fileResponseMessage.tuple));
     responseMessage.errorCode = ResponseError::ResponseOK;
-    responseMessage.mtype = fileResponseMessage.PID;
+    responseMessage.PID = fileResponseMessage.PID;
 
     if (msgsnd(responseQueueId, &responseMessage, sizeof(responseMessage), IPC_NOWAIT) < 0) {
-        std::cerr << "An attempt to send response with tuple has failed. Process PID: " << responseMessage.mtype
+        std::cerr << "An attempt to send response with tuple has failed. Process PID: " << responseMessage.PID
                 << ", tuple: " << responseMessage.tuple << std::endl;
         stop();
     }
@@ -318,7 +318,7 @@ void Server::processInputMessage(InputMessage &inputMessage)
 
 void Server::sendBackInputMessage(InputMessage &previous)
 {
-    previous.mtype = previous.mtype + 1;
+    previous.priority = previous.priority + 1;
 
     if (msgsnd(inputQueueId, &previous, sizeof(previous) - sizeof(long), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to send back input message has failed, process PID: " << previous.PID << std::endl;

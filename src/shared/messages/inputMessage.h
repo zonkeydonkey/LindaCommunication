@@ -9,7 +9,7 @@
 
 struct InputMessage
 {
-    long mtype;
+    long priority;
     long PID;
     TupleTemplate tupleTemplate;
     bool isRead;
