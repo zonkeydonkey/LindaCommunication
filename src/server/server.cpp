@@ -15,11 +15,6 @@ Server::Server()
 
 Server::~Server()
 {
-    msgctl(inputQueueId, IPC_RMID, nullptr);
-    msgctl(outputQueueId, IPC_RMID, nullptr);
-    msgctl(responseQueueId, IPC_RMID, nullptr);
-    msgctl(requestFileQueueId, IPC_RMID, nullptr);
-    msgctl(responseFileQueueId, IPC_RMID, nullptr);
 }
 
 int Server::init()
@@ -64,6 +59,11 @@ int Server::createMessageQueue (key_t key)
 void Server::stop()
 {
     running = false;
+    msgctl(inputQueueId, IPC_RMID, nullptr);
+    msgctl(outputQueueId, IPC_RMID, nullptr);
+    msgctl(responseQueueId, IPC_RMID, nullptr);
+    msgctl(requestFileQueueId, IPC_RMID, nullptr);
+    msgctl(responseFileQueueId, IPC_RMID, nullptr);
 }
 
 void Server::sendTimeoutedInfo(long PID)
@@ -170,7 +170,10 @@ void * inputQueueThreadHandler (void * arg)
         {
             if (msgrcv(server->inputQueueId, &inputMessage, INPUT_MESSAGE_MAX_SIZE, 0, 0) < 0)
             {
-                std::cerr << "Error while reading from input message queue\n";
+                if(errno != EIDRM)
+                    std::cerr << "Error while reading from input message queue\n";
+                else
+                    std::cout << "Input/Read thread closed." << std::endl;
                 server->stop();
                 return server;
             }
@@ -189,7 +192,10 @@ void * outputQueueThreadHandler (void * arg)
     {
         if (msgrcv(server->outputQueueId, &message, OUTPUT_MESSAGE_MAX_SIZE, 0, 0) < 0)
         {
-            std::cerr << "Error while reading from output message queue\n";
+            if(errno != EIDRM)
+                std::cerr << "Error while reading from output message queue\n";
+            else
+                std::cout << "Output thread closed." << std::endl;
             server->stop();
             return server;
         }
@@ -207,11 +213,17 @@ void *fileWorkerThreadHandler (void * server)
     while(servPtr->running)
     {
         if (fileWorker->receiveMessage() < 0)
+        {
+            if(errno != EIDRM)
+                perror("File Worker - message receiving error: ");
+            else
+                std::cout << "File Worker closed." << std::endl;
             servPtr->stop();
+        }
     }
 
     delete fileWorker;
-    return nullptr;
+    return server;
 }
 
 void Server::run ()

@@ -13,7 +13,6 @@ int FileWorker::receiveMessage()
     FileRequestMessage msg;
     if(msgrcv(requestFileQueueId, &msg, sizeof(msg) - sizeof(long), 0, 0) < 0)
     {
-        perror("File Worker - message receiving error: ");
         return -1;
     }
     std::cout << "File Worker - received message" << std::endl;

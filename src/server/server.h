@@ -17,6 +17,7 @@
 #include <cstring>
 #include <ctime>
 #include <unistd.h>
+#include <errno.h>
 
 #include "FileWorker.h"
 #include "../shared/utils/confFile.h"
