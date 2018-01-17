@@ -121,10 +121,10 @@ public:
 			}
 			switch (typ) {
 				case string: 
-					types += "s";
+					types += STRING_TYPE_CHAR;
 					break;
 				case integer:
-					types += "i";
+					types += INT_TYPE_CHAR;
 					break;
 				default: 
 					break;

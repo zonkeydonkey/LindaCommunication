@@ -20,6 +20,7 @@
 
 // support functions
 static void setTupleElement(va_list *elementsList, unsigned idx, tuple *tuple, char type);
+static void setTupleElement(std::string val, unsigned idx, tuple *tuple, char typeChar);
 
 tuple makeTuple(std::string elementsTypesList, ...)
 {
@@ -31,6 +32,17 @@ tuple makeTuple(std::string elementsTypesList, ...)
     resultTuple.elementsCount = elementsTypesList.length();
     for(unsigned i = 0; i < resultTuple.elementsCount; ++i)
         setTupleElement(&elementsList, i, &resultTuple, elementsTypesList[i]);
+    return resultTuple;
+}
+
+tuple makeTuple(std::string elementsTypesList, std::vector<std::string> values) 
+{
+    tuple resultTuple;
+    resultTuple.elementsCount = elementsTypesList.length();
+    for(unsigned i = 0; i < resultTuple.elementsCount; ++i) 
+    {
+        setTupleElement(values[i], i, &resultTuple, elementsTypesList[i]);
+    }
     return resultTuple;
 }
 
@@ -174,6 +186,29 @@ static void setTupleElement(va_list *elementsList, unsigned idx, tuple *tuple, c
             stringElement element;
             char *argValue = va_arg(*elementsList, char *);
             element.value = std::string(argValue);
+            element.idx = idx;
+            tuple->stringElements.push_back(element);
+            break;
+        }
+    }
+}
+
+static void setTupleElement(std::string val, unsigned idx, tuple *tuple, char typeChar)
+{
+    switch(typeChar)
+    {
+        case INT_TYPE_CHAR:
+        {
+            intElement element;
+            element.value = std::stoi(val);
+            element.idx = idx;
+            tuple->intElements.push_back(element);
+            break;
+        }
+        case STRING_TYPE_CHAR:
+        {
+            stringElement element;
+            element.value = val;
             element.idx = idx;
             tuple->stringElements.push_back(element);
             break;

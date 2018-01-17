@@ -8,6 +8,7 @@
 #include <string>
 #include <string.h>
 #include <list>
+#include <vector>
 
 #define INT_TYPE 0x00
 #define STRING_TYPE 0x01
@@ -37,6 +38,7 @@ typedef struct tuple
     To create tuple, using variable arguments list
 */
 tuple makeTuple(std::string elementsTypesList, ...);
+tuple makeTuple(std::string elementsTypesList, std::list<std::string> values) ;
 /*
     To allocate memory for tuple object
 */
