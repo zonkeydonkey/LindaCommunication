@@ -53,8 +53,6 @@ public:
 			Atom typ = null;
 			if (((typ = accept(string)) == null) &&
 				((typ = accept(integer)) == null)) {
-				if (elemNum == 0 && curToken.atom == rBracket)
-					return tuplTemp;
 				throw "Dopuszczalne typy elementów krotki - string, integer";
 			}
 			if (accept(colonOp) == null) {

@@ -117,14 +117,11 @@
 	{
 		std::string types = "";
 		std::vector<std::string> values;
-		unsigned elemNum = 0;
 		while (true) 
 		{
 			Atom typ = null;
 			if (((typ = accept(string)) == null) &&
 				((typ = accept(integer)) == null)) {
-				if (elemNum == 0 && curToken.atom == rBracket)
-					return makeTuple("");
 				throw "Dopuszczalne typy elementów krotki - string, integer";
 			}
 			switch (typ) {
@@ -141,7 +138,6 @@
 				throw "Nie znaleziono znaku :";
 			}
 			values.push_back(acceptConst(typ)); 
-			elemNum++;
 			if (accept(commaOp) == null) {
 				break;
 			}
