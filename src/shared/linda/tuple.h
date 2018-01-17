@@ -9,6 +9,7 @@
 #include <string.h>
 #include <list>
 #include "tupleTemplate.h"
+#include <vector>
 
 #define INT_TYPE 0x00
 #define STRING_TYPE 0x01
@@ -38,6 +39,7 @@ typedef struct tuple
     To create tuple, using variable arguments list
 */
 tuple makeTuple(std::string elementsTypesList, ...);
+tuple makeTuple(std::vector<std::string> values, std::string elementsTypesList);
 /*
     To allocate memory for tuple object
 */
@@ -56,7 +58,7 @@ int serializeTuple(const tuple *tuple, char *buffer, int *size);
 */
 tuple deserializeTuple(const char *buffer);
 /*
-
+    To compare tuple to template.
 */
 int cmpToTupleTemplate(const tuple *tuple, const TupleTemplate *tupleTemplate);
 
