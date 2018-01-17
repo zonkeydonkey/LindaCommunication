@@ -8,6 +8,7 @@
 #include <string>
 #include <string.h>
 #include <list>
+#include "tupleTemplate.h"
 
 #define INT_TYPE 0x00
 #define STRING_TYPE 0x01
@@ -54,5 +55,9 @@ int serializeTuple(const tuple *tuple, char *buffer, int *size);
     To deserialize tuple.
 */
 tuple deserializeTuple(const char *buffer);
+/*
+
+*/
+int cmpToTupleTemplate(const tuple *tuple, const TupleTemplate *tupleTemplate);
 
 #endif //TUPLE_TUPLE_H

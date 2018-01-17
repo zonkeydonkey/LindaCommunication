@@ -230,8 +230,8 @@ void Server::run ()
     if(pthread_create(&outputMessagesThread, nullptr, &outputQueueThreadHandler, this)) {
         std::cerr << "Error creating output messages thread\n";
         return;
-    }
 
+    }
     if(pthread_create(&fileWorkerThread, nullptr, &fileWorkerThreadHandler, this)) {
         std::cerr << "Error creating file worker thread\n";
         return;
@@ -243,8 +243,26 @@ void Server::run ()
     int size = TUPLE_MAX_SIZE;
     serializeTuple(&myTuple, message.tuple, &size);
     message.PID = 12;
-    processOutputMessage(message);
-    */
+    TupleTemplate tupleTemplate;
+    TextTemplate t1, t3;
+    NumberTemplate t2;
+    t1.setValues(Equals, 0, "lol");
+    t2.tempOp = Equals;
+    t2.value = 1;
+    t2.order = 1;
+    t3.setValues(Equals, 2, "xD");
+    tupleTemplate.numberNb = 1;
+    tupleTemplate.textNb = 2;
+    tupleTemplate.numbers[0] = t2;
+    tupleTemplate.texts[0] = t1;
+    tupleTemplate.texts[1] = t3;
+    if(cmpToTupleTemplate(&myTuple, &tupleTemplate) == 0)
+        std::cout << "NO FAJNIE" << std::endl;
+    else
+        std::cout << "NO NIE FAJNIE" << std::endl;
+
+    processOutputMessage(message);*/
+
 
     pthread_join(inputMessagesThread, nullptr);
     pthread_join(outputMessagesThread, nullptr);
@@ -257,7 +275,7 @@ void Server::processOutputMessage(OutputMessage &message)
     fileRequest.operation = Output;
     memcpy(fileRequest.tuple, message.tuple, sizeof(message.tuple));
     fileRequest.mtype = message.PID;
-    fileRequest.tupleSize = (unsigned int) strlen(message.tuple);
+    //fileRequest.tupleSize = (unsigned int) strlen(message.tuple);
 
     if (msgsnd(requestFileQueueId, &fileRequest, sizeof(fileRequest) - sizeof(long), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to send request to file worker has failed. Operation: output, tuple: "

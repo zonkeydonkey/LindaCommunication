@@ -65,8 +65,7 @@ int FileWorker::inputService(FileRequestMessage *msg)
     while((tupleBuffer = readFromFile()) != NULL)
     {
         tuple deserializedTuple = deserializeTuple(tupleBuffer);
-        // porównanie z templatem
-        if(true)
+        if(cmpToTupleTemplate(&deserializedTuple, &(msg->tupleTemplate)) == 0)
         {
             if(removeTupleFromFile() == 0)
             {
@@ -101,8 +100,7 @@ int FileWorker::readService(FileRequestMessage *msg)
     while((tupleBuffer = readFromFile()) != NULL)
     {
         tuple deserializedTuple = deserializeTuple(tupleBuffer);
-        // porównanie z templatem
-        if(true)
+        if(cmpToTupleTemplate(&deserializedTuple, &(msg->tupleTemplate)) == 0)
         {
             memcpy(resMsg.tuple, tupleBuffer, readedTupleBytesCount);
             resMsg.errorCode = FileResponseOK;

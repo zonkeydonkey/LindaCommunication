@@ -20,6 +20,8 @@
 
 // support functions
 static void setTupleElement(va_list *elementsList, unsigned idx, tuple *tuple, char type);
+static int checkStringValue(stringElement tupleElement, TextTemplate templateElement);
+static int checkIntegerValue(intElement tupleElement, NumberTemplate templateElement);
 
 tuple makeTuple(std::string elementsTypesList, ...)
 {
@@ -156,6 +158,140 @@ tuple deserializeTuple(const char *buffer)
     return resultTuple;
 }
 
+int cmpToTupleTemplate(const tuple *tuple, const TupleTemplate *tupleTemplate)
+{
+    if((tuple->stringElements.size() != (unsigned)tupleTemplate->textNb) ||
+       (tuple->intElements.size() != (unsigned)tupleTemplate->numberNb))
+        return -1;
+    unsigned i = 0;
+    for(std::list<stringElement>::const_iterator strIter = tuple->stringElements.begin();
+        strIter != tuple->stringElements.end(); ++strIter)
+    {
+        if((*strIter).idx != (unsigned)tupleTemplate->texts[i].order)
+            return -1;
+        if(checkStringValue((*strIter), tupleTemplate->texts[i]) < 0)
+            return -1;
+        ++i;
+    }
+    i = 0;
+    for(std::list<intElement>::const_iterator intIter = tuple->intElements.begin();
+        intIter != tuple->intElements.end(); ++intIter)
+    {
+        if((*intIter).idx != (unsigned)tupleTemplate->numbers[i].order)
+            return -1;
+        if(checkIntegerValue((*intIter), tupleTemplate->numbers[i]) < 0)
+            return -1;
+        ++i;
+    }
+    return 0;
+}
+
+static int checkStringValue(stringElement tupleElement, TextTemplate templateElement)
+{
+    std::string tupleValue = tupleElement.value;
+    std::string templateValue = std::string(templateElement.value);
+    switch(templateElement.tempOp)
+    {
+        case Any:
+        {
+            return 0;
+        }
+        case Equals:
+        {
+            size_t anyPos;
+            if((anyPos = templateValue.find("*")) != std::string::npos)
+            {
+                if((anyPos == 0) || (tupleValue.substr(0, anyPos) == templateValue.substr(0, anyPos)))
+                {
+                    int tupleValueLength = tupleValue.length();
+                    int templateValueLength = templateValue.length();
+                    int secondPartTemplateValueLength = templateValueLength - anyPos - 1;
+                    if(secondPartTemplateValueLength == 0)
+                        return 0;
+                    std::string secondPartTemplateValue = templateValue.substr(anyPos + 1, secondPartTemplateValueLength);
+                    if(tupleValue.substr(tupleValueLength - secondPartTemplateValueLength, secondPartTemplateValueLength) == secondPartTemplateValue)
+                        return 0;
+                }
+                break;
+            }
+            else
+            {
+                if(tupleValue == templateValue)
+                    return 0;
+            }
+            break;
+        }
+        case Less:
+        {
+            if(tupleValue < templateValue)
+                return 0;
+            break;
+        }
+        case LessOrEquals:
+        {
+            if(tupleValue <= templateValue)
+                return 0;
+            break;
+        }
+        case Greater:
+        {
+            if(tupleValue > templateValue)
+                return 0;
+            break;
+        }
+        case GreaterOrEquals:
+        {
+            if(tupleValue >= templateValue)
+                return 0;
+            break;
+        }
+    }
+    return -1;
+}
+
+static int checkIntegerValue(intElement tupleElement, NumberTemplate templateElement)
+{
+    int tupleValue = tupleElement.value;
+    int templateValue = templateElement.value;
+    switch(templateElement.tempOp)
+    {
+        case Any:
+        {
+            return 0;
+        }
+        case Equals:
+        {
+            if(tupleValue == templateValue)
+                return 0;
+            break;
+        }
+        case Less:
+        {
+            if(tupleValue < templateValue)
+                return 0;
+            break;
+        }
+        case LessOrEquals:
+        {
+            if(tupleValue <= templateValue)
+                return 0;
+            break;
+        }
+        case Greater:
+        {
+            if(tupleValue > templateValue)
+                return 0;
+            break;
+        }
+        case GreaterOrEquals:
+        {
+            if(tupleValue >= templateValue)
+                return 0;
+            break;
+        }
+    }
+    return -1;
+}
 
 static void setTupleElement(va_list *elementsList, unsigned idx, tuple *tuple, char typeChar)
 {
