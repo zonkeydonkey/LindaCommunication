@@ -26,9 +26,12 @@ typedef struct NumberTemplate
         order = ord;
         value = val;
     }
-    void print() 
+    void print()
     {
         std::cout << order << ". operator nr " << tempOp << ", wartość int: " << value << std::endl;
+    }
+    NumberTemplate() {
+        order = -1;
     }
 } NumberTemplate;
 
@@ -43,9 +46,12 @@ typedef struct TextTemplate
         order = ord;
         strcpy(value, val.c_str());
     }
-    void print() 
+    void print()
     {
         std::cout << order << ". operator nr " << tempOp << ", wartość string: " << value << std::endl;
+    }
+    TextTemplate() {
+        order = -1;
     }
 } TextTemplate;
 

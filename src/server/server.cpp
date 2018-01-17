@@ -244,6 +244,7 @@ void Server::run ()
         return;
 
     }
+    
     if(pthread_create(&fileWorkerThread, nullptr, &fileWorkerThreadHandler, this)) {
         std::cerr << "Error creating file worker thread\n";
         return;
@@ -255,26 +256,32 @@ void Server::run ()
     int size = TUPLE_MAX_SIZE;
     serializeTuple(&myTuple, message.tuple, &size);
     message.PID = 12;
-    TupleTemplate tupleTemplate;
     TextTemplate t1, t3;
     NumberTemplate t2;
     t1.setValues(Equals, 0, "lol");
-    t2.tempOp = Equals;
-    t2.value = 1;
-    t2.order = 1;
+    t2.tempOp = Greater;
+    t2.value = 0;
+    t2.order = 0;
     t3.setValues(Equals, 2, "xD");
-    tupleTemplate.numberNb = 1;
-    tupleTemplate.textNb = 2;
-    tupleTemplate.numbers[0] = t2;
-    tupleTemplate.texts[0] = t1;
-    tupleTemplate.texts[1] = t3;
-    if(cmpToTupleTemplate(&myTuple, &tupleTemplate) == 0)
+    InputMessage msg;
+    msg.priority = 0;
+    msg.PID = 12;
+    msg.isRead = true;
+    msg.timestamp = time(0);
+    msg.timeout = 1000;
+    msg.tupleTemplate.numberNb = 1;
+    msg.tupleTemplate.textNb = 0;
+    msg.tupleTemplate.numbers[0] = t2;
+    msg.tupleTemplate.texts[0] = t1;
+    msg.tupleTemplate.texts[1] = t3;
+    if(cmpToTupleTemplate(&myTuple, &msg.tupleTemplate) == 0)
         std::cout << "NO FAJNIE" << std::endl;
     else
         std::cout << "NO NIE FAJNIE" << std::endl;
 
-    processOutputMessage(message);*/
-
+    msg.tupleTemplate.print();
+    processOutputMessage(message);
+    processInputMessage(msg);*/
 
     pthread_join(inputMessagesThread, nullptr);
     pthread_join(outputMessagesThread, nullptr);
