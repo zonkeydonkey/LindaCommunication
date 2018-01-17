@@ -38,7 +38,7 @@ typedef struct tuple
     To create tuple, using variable arguments list
 */
 tuple makeTuple(std::string elementsTypesList, ...);
-tuple makeTuple(std::string elementsTypesList, std::list<std::string> values) ;
+tuple makeTuple(std::vector<std::string> values, std::string elementsTypesList);
 /*
     To allocate memory for tuple object
 */

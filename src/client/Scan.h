@@ -23,11 +23,11 @@ enum Atom {
 	greaterEqual,	//12
 	lessThan,		//13
 	lessEqual,		//14
-	notEqual, 		//15
-	equals,			//16
-	starOp,			//17
-	null,			//18
-	endl			//19
+	equals,			//15
+	starOp,			//16
+	null,			//17
+	endl			//18
+	// notEqual
 };
 
 
@@ -60,7 +60,7 @@ private:
 	Keywords *kwords;
 
 	Token scanKword();
-	Token scanNumber();
+	Token scanNumber(std::string scannedPart);
 	Token scanStringConst(char qMark);
 
 	bool isLetter(char i);

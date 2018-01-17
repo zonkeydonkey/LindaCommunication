@@ -35,7 +35,7 @@ tuple makeTuple(std::string elementsTypesList, ...)
     return resultTuple;
 }
 
-tuple makeTuple(std::string elementsTypesList, std::vector<std::string> values) 
+tuple makeTuple(std::vector<std::string> values, std::string elementsTypesList) 
 {
     tuple resultTuple;
     resultTuple.elementsCount = elementsTypesList.length();

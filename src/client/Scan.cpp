@@ -47,7 +47,7 @@
 		return Token(kwords->find(str));
 	}
 
-	Token Scan::scanNumber() 
+	Token Scan::scanNumber(std::string scannedPart) 
 	{
 		if (curChar == '0') {
 			curChar = src->nextChar();
@@ -55,13 +55,12 @@
 				throw "Wiele zer wiodących";
 			return Token(intConst, "0");
 		}
-		std::string i = "";
 		while ((curChar != -1) && isDigit(curChar))
 		{
-			i += curChar;
+			scannedPart += curChar;
 			curChar = src->nextChar();
 		}
-		return Token(intConst, i);
+		return Token(intConst, scannedPart);
 	}
 
 	Token Scan::scanStringConst(char qMark) // na "
@@ -112,8 +111,14 @@
 		if (isLetter(curChar))
 			return scanKword();
 		if (isDigit(curChar))
-			return scanNumber();
+			return scanNumber(std::string(""));
 		switch(curChar) {
+		case '-':
+			curChar = src->nextChar();
+			if (isDigit(curChar))
+				return scanNumber(std::string("-"));	
+			else
+				throw "Brak stałej liczbowej po operatorze -";
 		case '"':
 			return scanStringConst(curChar);
 		case '(': 
@@ -149,13 +154,13 @@
 				return Token(equals);
 			}
 			throw "Po znaku = oczekiwano =";
-		case '!':
-			curChar = src->nextChar();
-			if (curChar == '=') {
-				curChar = src->nextChar();
-				return Token(notEqual);
-			}
-			throw "Po znaku ! oczekiwano =";
+		// case '!':
+		// 	curChar = src->nextChar();
+		// 	if (curChar == '=') {
+		// 		curChar = src->nextChar();
+		// 		return Token(notEqual);
+		// 	}
+		// 	throw "Po znaku ! oczekiwano =";
 		case '*':
 			curChar = src->nextChar();
 			return Token(starOp);
