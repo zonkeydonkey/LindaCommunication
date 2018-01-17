@@ -4,6 +4,7 @@
 
 #include "server.h"
 
+// LindaCommunication
 const std::string Server::sharedConfFilename = "../LindaCommunication/src/shared/conf/queue.conf";
 const std::string Server::serverConfFilename = "../LindaCommunication/src/server/conf/queue.conf";
 const std::string Server::tupleSpaceConfFilename = "../LindaCommunication/src/server/conf/tupleSpace.conf";
@@ -205,7 +206,7 @@ void *fileWorkerThreadHandler (void * server)
                                             servPtr->tupleSpaceFile);
     while(servPtr->running)
     {
-        if (fileWorker->receiveMessage() == -1)
+        if (fileWorker->receiveMessage() < 0)
             servPtr->stop();
     }
 
@@ -218,6 +219,8 @@ void Server::run ()
     pthread_t inputMessagesThread;
     pthread_t outputMessagesThread;
     pthread_t fileWorkerThread;
+
+    std::cout << "Server init." << std::endl;
 
     if(pthread_create(&inputMessagesThread, nullptr, &inputQueueThreadHandler, this)) {
         std::cerr << "Error creating input messages thread\n";
@@ -234,6 +237,15 @@ void Server::run ()
         return;
     }
 
+    /* do testow
+    OutputMessage message;
+    tuple myTuple = makeTuple("sis", "lol", 1, "xD");
+    int size = TUPLE_MAX_SIZE;
+    serializeTuple(&myTuple, message.tuple, &size);
+    message.PID = 12;
+    processOutputMessage(message);
+    */
+
     pthread_join(inputMessagesThread, nullptr);
     pthread_join(outputMessagesThread, nullptr);
     pthread_join(fileWorkerThread, nullptr);
@@ -243,8 +255,10 @@ void Server::processOutputMessage(OutputMessage &message)
 {
     FileRequestMessage fileRequest;
     fileRequest.operation = Output;
-    std::strcpy(fileRequest.tuple, message.tuple);
+    memcpy(fileRequest.tuple, message.tuple, sizeof(message.tuple));
     fileRequest.mtype = message.PID;
+    // tutaj trzeba zrobić, zeby file worker dostawal info o rzeczywistej ilosci bajtow
+    fileRequest.tupleBufferBytes = 18;
 
     if (msgsnd(requestFileQueueId, &fileRequest, sizeof(fileRequest) - sizeof(long), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to send request to file worker has failed. Operation: output, tuple: "

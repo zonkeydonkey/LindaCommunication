@@ -22,9 +22,16 @@ private:
     int requestFileQueueId;
     int responseFileQueueId;
     const std::string tupleSpaceFile;
+    int filePos = 0;
+    int readedTupleBytesCount = 0;
 
+    int outputService(FileRequestMessage *msg);
+    int inputService(FileRequestMessage *msg);
+    int readService(FileRequestMessage *msg);
     int printToFile(char *tupleBuffer, unsigned bytesCount);
-    const char *readFromFile(unsigned idx);
+    const char *readFromFile();
+    int removeTupleFromFile();
+    void printSendMsgInfo(FileResponseMessage *resMsg);
 public:
     FileWorker(int, int, std::string);
     ~FileWorker();

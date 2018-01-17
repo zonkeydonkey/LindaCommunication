@@ -6,6 +6,7 @@
 #define LINDACOMMUNICATION_SERVER_H
 
 #include <string>
+#include <stdio.h>
 #include <sys/msg.h>
 #include <sys/ipc.h>
 #include <sys/types.h>
