@@ -39,6 +39,9 @@ typedef struct tuple
     To create tuple, using variable arguments list
 */
 tuple makeTuple(std::string elementsTypesList, ...);
+/*
+    To create tuple, using std::vector
+*/
 tuple makeTuple(std::vector<std::string> values, std::string elementsTypesList);
 /*
     To allocate memory for tuple object
@@ -49,16 +52,16 @@ void freeTuple(tuple *tuple);
 */
 void printTuple(tuple *tuple);
 /*
-    To serialize provided tuple.
-    Returns count of elements that have been serialized or -1, in case of error.
+    To serialize provided tuple
+    Returns count of elements that have been serialized or -1, in case of error
 */
 int serializeTuple(const tuple *tuple, char *buffer, int *size);
 /*
-    To deserialize tuple.
+    To deserialize tuple
 */
 tuple deserializeTuple(const char *buffer);
 /*
-    To compare tuple to template.
+    To compare tuple to template
 */
 int cmpToTupleTemplate(const tuple *tuple, const TupleTemplate *tupleTemplate);
 
