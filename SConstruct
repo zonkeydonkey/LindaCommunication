@@ -1,5 +1,5 @@
 env = Environment()
-env.Append(CXXFLAGS = ['-std=c++11', '-pthread', '-Wall', '-g'])
+env.Append(CXXFLAGS = ['-std=c++11', '-pthread', '-Wall', '-g', '-fstack-protector'])
 
 libraries = ['pthread']
 
