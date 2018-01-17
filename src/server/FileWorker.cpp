@@ -198,7 +198,7 @@ int FileWorker::removeTupleFromFile()
 void FileWorker::printSendMsgInfo(FileResponseMessage *resMsg)
 {
     std::cout << "File Worker - sended message:" << std::endl;
-    std::cout << "Type: " << resMsg->PID;
+    std::cout << "PID: " << resMsg->PID;
     std::cout << " | ThreadID: ";
     switch(resMsg->threadID)
     {
