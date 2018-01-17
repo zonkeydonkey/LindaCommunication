@@ -5,9 +5,9 @@
 #include "server.h"
 
 // LindaCommunication
-const std::string Server::sharedConfFilename = "../LindaCommunication/src/shared/conf/queue.conf";
-const std::string Server::serverConfFilename = "../LindaCommunication/src/server/conf/queue.conf";
-const std::string Server::tupleSpaceConfFilename = "../LindaCommunication/src/server/conf/tupleSpace.conf";
+const std::string Server::sharedConfFilename = "../../src/shared/conf/queue.conf";
+const std::string Server::serverConfFilename = "../../src/server/conf/queue.conf";
+const std::string Server::tupleSpaceConfFilename = "../../src/server/conf/tupleSpace.conf";
 
 Server::Server()
 {
@@ -106,7 +106,7 @@ FileResponseMessage Server::tryFindTuple(InputMessage &inputMessage)
 void Server::sendTupleFoundInfo (FileResponseMessage &fileResponseMessage)
 {
     ResponseMessage responseMessage;
-    std::strcpy(responseMessage.tuple, fileResponseMessage.tuple);
+    std::memcpy(responseMessage.tuple, fileResponseMessage.tuple, strlen(fileResponseMessage.tuple));
     responseMessage.errorCode = ResponseError::ResponseOK;
     responseMessage.mtype = fileResponseMessage.mtype;
 
@@ -120,7 +120,7 @@ void Server::sendTupleFoundInfo (FileResponseMessage &fileResponseMessage)
 void Server::sendBackTuple(FileResponseMessage &fileResponseMessage)
 {
     OutputMessage outputMessage;
-    std::strcpy(outputMessage.tuple, fileResponseMessage.tuple);
+    std::memcpy(outputMessage.tuple, fileResponseMessage.tuple, strlen(fileResponseMessage.tuple));
     outputMessage.PID = fileResponseMessage.mtype;
 
     if (msgsnd(outputQueueId, &outputMessage, sizeof(outputMessage), IPC_NOWAIT) < 0) {
@@ -257,8 +257,7 @@ void Server::processOutputMessage(OutputMessage &message)
     fileRequest.operation = Output;
     memcpy(fileRequest.tuple, message.tuple, sizeof(message.tuple));
     fileRequest.mtype = message.PID;
-    // tutaj trzeba zrobić, zeby file worker dostawal info o rzeczywistej ilosci bajtow
-    fileRequest.tupleBufferBytes = 18;
+    fileRequest.tupleSize = (unsigned int) strlen(message.tuple);
 
     if (msgsnd(requestFileQueueId, &fileRequest, sizeof(fileRequest) - sizeof(long), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to send request to file worker has failed. Operation: output, tuple: "
