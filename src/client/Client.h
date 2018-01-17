@@ -41,9 +41,10 @@ class Client {
 		message.tupleTemplate = templ;
 		message.isRead = (commandType == readInstr);
 		message.timeout = timeout;
-	    if (msgsnd(inputQueueId, &message, sizeof(message), IPC_NOWAIT) < 0)
+        message.priority = 0;
+	    if (msgsnd(inputQueueId, &message, sizeof(message) - sizeof(long), IPC_NOWAIT) < 0)
 	    {
-	        perror("Błąd - wzór krotki nie został umieszczony w przestrzeni: ");
+	        perror("Błąd - wzór krotki nie został umieszczony w przestrzeni");
 	        return -1;
 	    }
 	    readResponseMessage();
@@ -104,6 +105,9 @@ public:
 	        perror("Błąd - krotka nie została umieszczona w przestrzeni krotek :");
 	        return -1;
 	    }
+        std::cout << "Tuple: " << std::endl;
+        printTuple(&toSave);
+        std::cout << " written." << std::endl;
 	    return 0;
 	}
 

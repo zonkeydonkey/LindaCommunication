@@ -66,6 +66,7 @@ int FileWorker::inputService(FileRequestMessage *msg)
     while((tupleBuffer = readFromFile()) != NULL)
     {
         tuple deserializedTuple = deserializeTuple(tupleBuffer);
+        std::cout << "Read tuple: " << (*deserializedTuple.stringElements.begin()).value << std::endl;
         if(cmpToTupleTemplate(&deserializedTuple, &(msg->tupleTemplate)) == 0)
         {
             if(removeTupleFromFile() == 0)
@@ -115,6 +116,7 @@ int FileWorker::readService(FileRequestMessage *msg)
     }
     filePos = 0;
     readedTupleBytesCount = 0;
+
     if (msgsnd(responseFileQueueId, &resMsg, sizeof(resMsg), IPC_NOWAIT) < 0)
     {
         perror("File Worker - message sending error: ");
