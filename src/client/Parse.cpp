@@ -89,7 +89,7 @@
 		Atom at = null;
 		if ((at = accept(output)) == null)
 			if (((at = accept(input)) == null))
-				if ((at = accept(read)) == null)
+				if ((at = accept(readInstr)) == null)
 			throw "Dopuszczalne polecenia: input, output, read";
 		if (accept(lBracket) == null) 
 			throw "Oczekwano znaku (";
@@ -99,10 +99,9 @@
 		{
 			case output:
 				tUnion.t = parseTuple();
-				printTuple(&tUnion.t);
 				break;
 			case input:
-			case read:
+			case readInstr:
 				tUnion.tt = parseTupleTemplate();
 				break;
 			default:

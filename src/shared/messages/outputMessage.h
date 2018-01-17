@@ -11,6 +11,7 @@ typedef struct OutputMessage
 {
     long PID;
     char tuple [TUPLE_MAX_SIZE];
+    size_t originalSize;
 } OutputMessage;
 
 #endif //LINDACOMMUNICATION_OUTPUTMESSAGE_H

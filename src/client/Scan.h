@@ -10,7 +10,7 @@
 enum Atom {
 	output,			//0
 	input,			//1
-	read,			//2
+	readInstr,		//2
 	integer,		//3
 	string,			//4
 	intConst,		//5
