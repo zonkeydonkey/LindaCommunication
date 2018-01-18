@@ -48,7 +48,10 @@ int FileWorker::outputService(FileRequestMessage *msg)
     }
     else
     {
-        std::cout << "File Worker - save tuple("<< msg->tupleSize << " bytes) in the tuple space" << std::endl;
+        std::cout << "File Worker - save tuple("<< msg->tupleSize << " bytes) in the tuple space:" << std::endl;
+        tuple deserializedTuple = deserializeTuple(msg->tuple);
+        printTuple(&deserializedTuple);
+        std::cout << std::endl;
         //resMsg.errorCode = FileResponseOK;
     }
     /*if (msgsnd(responseFileQueueId, &resMsg, sizeof(resMsg) - sizeof(long), IPC_NOWAIT) < 0)
@@ -64,15 +67,15 @@ int FileWorker::inputService(FileRequestMessage *msg)
 {
     FileResponseMessage resMsg;
     const char *tupleBuffer;
-    char tempTupleBuffer[TUPLE_MAX_SIZE];
     resMsg.PID = msg->PID;
     resMsg.threadID = In;
     while((tupleBuffer = readFromFile()) != NULL)
     {
+        char tempTupleBuffer[TUPLE_MAX_SIZE];
+        memcpy(tempTupleBuffer, tupleBuffer, readedTupleBytesCount);
         tuple deserializedTuple = deserializeTuple(tupleBuffer);
         if(cmpToTupleTemplate(&deserializedTuple, &(msg->tupleTemplate)) == 0)
         {
-            memcpy(tempTupleBuffer, tupleBuffer, readedTupleBytesCount);
             if(removeTupleFromFile() == 0)
             {
                 memcpy(resMsg.tuple, tempTupleBuffer, readedTupleBytesCount);
@@ -107,10 +110,12 @@ int FileWorker::readService(FileRequestMessage *msg)
     resMsg.threadID = In;
     while((tupleBuffer = readFromFile()) != NULL)
     {
+        char tempTupleBuffer[TUPLE_MAX_SIZE];
+        memcpy(tempTupleBuffer, tupleBuffer, readedTupleBytesCount);
         tuple deserializedTuple = deserializeTuple(tupleBuffer);
         if(cmpToTupleTemplate(&deserializedTuple, &(msg->tupleTemplate)) == 0)
         {
-            memcpy(resMsg.tuple, tupleBuffer, readedTupleBytesCount);
+            memcpy(resMsg.tuple, tempTupleBuffer, readedTupleBytesCount);
             resMsg.tupleSize = readedTupleBytesCount;
             resMsg.errorCode = FileResponseOK;
             break;
@@ -206,8 +211,8 @@ int FileWorker::removeTupleFromFile()
 void FileWorker::printSendMsgInfo(FileResponseMessage *resMsg)
 {
     std::cout << "File Worker - sended message:" << std::endl;
-    std::cout << "PID: " << resMsg->PID;
-    std::cout << " | ThreadID: ";
+    std::cout << "PID: " << resMsg->PID << std::endl;;
+    std::cout << "ThreadID: ";
     switch(resMsg->threadID)
     {
         case Out:
@@ -220,11 +225,16 @@ void FileWorker::printSendMsgInfo(FileResponseMessage *resMsg)
             std::cout << "Input/Read";
             break;
         }
-        std::cout << std::endl;
     }
-    //if(resMsg->tuple != NULL)
-        //std::cout << "Tuple: " << resMsg->tuple;
-    std::cout << " | ErrorCode: ";
+    std::cout << std::endl;
+    if(resMsg->errorCode == FileResponseOK)
+    {
+        tuple deserializedTuple = deserializeTuple(resMsg->tuple);
+        std::cout << "Tuple: " << std::endl;
+        printTuple(&deserializedTuple);
+        std::cout << "Tuple size: " << resMsg->tupleSize << std::endl;
+    }
+    std::cout << "ErrorCode: ";
     switch(resMsg->errorCode)
     {
         case FileResponseOK:
@@ -242,5 +252,6 @@ void FileWorker::printSendMsgInfo(FileResponseMessage *resMsg)
             std::cout << "Output error";
         }
     }
-    std::cout << " | Tuple size: " << resMsg->tupleSize << std::endl;
+    std::cout << std::endl;
+    std::cout << std::endl;
 }
