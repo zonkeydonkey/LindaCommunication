@@ -22,26 +22,26 @@ class Client {
     int outputQueueId;
     int responseQueueId;
 
-    int readResponseMessage() 
+    int readResponseMessage()
     {
     	ResponseMessage message;
-		if (msgrcv(responseQueueId, &message, sizeof(message), getpid(), MSG_NOERROR) < 0)
+		if (msgrcv(responseQueueId, &message, sizeof(message) - sizeof(long), getpid(), MSG_NOERROR) < 0)
 		{
 			perror("Błąd - nie udało się pobrać krotki zgodnej ze wzorcem :");
 			return -1;
 		}
 		if (message.errorCode != ResponseOK)
 		{
-			std::cout << "timeout\n";
+			std::cout << "Timeout\n" << std::endl;
 			return 0;
 		}
 		tuple t = deserializeTuple(message.tuple);
-		std::cout << "Udało się znaleźć krotkę: ";
+		std::cout << "Udało się znaleźć krotkę: " << std::endl;
 		printTuple(&t);
 		return 0;
     }
 
-	int readOrInputMessage(Atom commandType, TupleTemplate templ, time_t timeout) 
+	int readOrInputMessage(Atom commandType, TupleTemplate templ, time_t timeout)
 	{
 		InputMessage inpMessage;
         inpMessage.priority = 1;
@@ -50,7 +50,7 @@ class Client {
         inpMessage.isRead = (commandType == readInstr);
         inpMessage.timeout = timeout;
         inpMessage.timestamp = std::time(0);
-	    if (msgsnd(inputQueueId, &inpMessage, sizeof(inpMessage), IPC_NOWAIT) < 0)
+	    if (msgsnd(inputQueueId, &inpMessage, sizeof(inpMessage) - sizeof(long), IPC_NOWAIT) < 0)
 	    {
 	        perror("Błąd - wzór krotki nie został umieszczony w przestrzeni: ");
 	        return -1;
@@ -108,7 +108,7 @@ public:
 	    serializeTuple(&toSave, message.tuple, &size);
 	    message.originalSize = TUPLE_MAX_SIZE - size;
 	    message.PID = getpid();
-	    if (msgsnd(outputQueueId, &message, sizeof(message), IPC_NOWAIT) < 0)
+	    if (msgsnd(outputQueueId, &message, sizeof(message) - sizeof(long), IPC_NOWAIT) < 0)
 	    {
 	        perror("Błąd - krotka nie została umieszczona w przestrzeni krotek :");
 	        return -1;
