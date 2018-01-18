@@ -6,13 +6,13 @@
 #include <sys/msg.h>
 #include <unistd.h>
 #include <memory>
+#include<ctime>
 #include <iostream>
 #include "Parse.h"
 #include "../shared/messages/outputMessage.h" //tuples
 #include "../shared/messages/inputMessage.h" // templates
 #include "../shared/messages/responseMessage.h"
 #include "../shared/utils/confFile.h"
-
 
 class Client {
 	Parse *parse;
@@ -36,15 +36,17 @@ class Client {
 
 	int readOrInputMessage(Atom commandType, TupleTemplate templ, time_t timeout) 
 	{
-		InputMessage message;
-		message.PID = getpid();
-		message.tupleTemplate = templ;
-		message.isRead = (commandType == readInstr);
-		message.timeout = timeout;
-        message.priority = 0;
-	    if (msgsnd(inputQueueId, &message, sizeof(message) - sizeof(long), IPC_NOWAIT) < 0)
+		InputMessage inpMessage;
+        inpMessage.priority = 1;
+        inpMessage.PID = getpid();
+        inpMessage.tupleTemplate = templ;
+        inpMessage.isRead = (commandType == readInstr);
+        inpMessage.timeout = timeout;
+        inpMessage.timestamp = std::time(0);
+	    if (msgsnd(inputQueueId, &inpMessage, sizeof(inpMessage) - sizeof(long), IPC_NOWAIT) < 0)
 	    {
-	        perror("Błąd - wzór krotki nie został umieszczony w przestrzeni");
+	        perror("Błąd - nie udało się wysłać komunikatu read/input");
+            std::cout << "bl: " << errno << std::endl;
 	        return -1;
 	    }
 	    readResponseMessage();
