@@ -2,6 +2,8 @@
 #define LINDACOMMUNICATION_PARSE_H
 
 #include "Scan.h"
+#include <ctime>
+#include <climits>
 #include "../shared/linda/tuple.h"
 #include "../shared/linda/tupleTemplate.h"
 
@@ -17,6 +19,8 @@ class Command
 public:
 	Atom cmd;
 	TupleOrTemplate tupleUnion;
+	time_t timeout;
+	Command(Atom a, TupleOrTemplate t, time_t tim): cmd(a), tupleUnion(t), timeout(tim) {}
 	Command(Atom a, TupleOrTemplate t): cmd(a), tupleUnion(t) {}
 	Command(Atom a): cmd(a) {}
 	Command() {}
@@ -43,6 +47,17 @@ public:
 	Command parseCommand();
 	tuple parseTuple();
 
+	time_t parseTimeout() 
+	{
+		if (curToken.atom != intConst)
+		{
+			return LONG_MAX - std::time(0);
+		}
+		std::string timeout = curToken.value;
+		nextToken();
+		//std::cout << atol(timeout.c_str()) << "\n";
+		return atol(timeout.c_str());
+	}
 
 	TupleTemplate parseTupleTemplate() 
 	{
@@ -52,7 +67,12 @@ public:
 		{
 			Atom typ = null;
 			if (((typ = accept(string)) == null) &&
-				((typ = accept(integer)) == null)) {
+				((typ = accept(integer)) == null)) 
+			{
+				if (elemNum > 0 && curToken.atom == intConst) // natknęliśmy się na timeout
+				{
+					return tuplTemp;
+				}
 				throw "Dopuszczalne typy elementów krotki - string, integer";
 			}
 			if (accept(colonOp) == null) {

@@ -94,6 +94,7 @@
 		if (accept(lBracket) == null) 
 			throw "Oczekwano znaku (";
 
+		time_t timeout = 0;
 		TupleOrTemplate tUnion;
 		switch (at) 
 		{
@@ -103,6 +104,7 @@
 			case input:
 			case readInstr:
 				tUnion.tt = parseTupleTemplate();
+				timeout = parseTimeout();
 				break;
 			default:
 			 	break;
@@ -110,7 +112,7 @@
 		if (accept(rBracket) == null) {
 			throw "Oczekwano znaku )";
 		}
-		return Command(at, tUnion);
+		return Command(at, tUnion, timeout);
 	}
 
 	tuple Parse::parseTuple() 

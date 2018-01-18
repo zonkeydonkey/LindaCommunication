@@ -149,7 +149,7 @@ public:
 						break;
 					case input:
 					case readInstr:
-						readOrInputMessage(cmd.cmd, cmd.tupleUnion.tt, LONG_MAX - std::time(0));
+						readOrInputMessage(cmd.cmd, cmd.tupleUnion.tt, cmd.timeout); //LONG_MAX - std::time(0)
 						break;
 					default:
 						break;
