@@ -72,6 +72,7 @@ int FileWorker::inputService(FileRequestMessage *msg)
             if(removeTupleFromFile() == 0)
             {
                 memcpy(resMsg.tuple, tupleBuffer, readedTupleBytesCount);
+                resMsg.tupleSize = readedTupleBytesCount;
                 resMsg.errorCode = FileResponseOK;
             }
             else
@@ -106,6 +107,7 @@ int FileWorker::readService(FileRequestMessage *msg)
         if(cmpToTupleTemplate(&deserializedTuple, &(msg->tupleTemplate)) == 0)
         {
             memcpy(resMsg.tuple, tupleBuffer, readedTupleBytesCount);
+            resMsg.tupleSize = readedTupleBytesCount;
             resMsg.errorCode = FileResponseOK;
             break;
         }

@@ -29,6 +29,11 @@ class Client {
 			perror("Błąd - nie udało się pobrać krotki zgodnej ze wzorcem :");
 			return -1;
 		}
+		if (message.errorCode != ResponseOK)
+		{
+			std::cout << "timeout\n";
+			return 0;
+		}
 		tuple t = deserializeTuple(message.tuple);
 		std::cout << "Udało się znaleźć krotkę: ";
 		printTuple(&t);
