@@ -65,4 +65,7 @@ tuple deserializeTuple(const char *buffer);
 */
 int cmpToTupleTemplate(const tuple *tuple, const TupleTemplate *tupleTemplate);
 
+
+int getTupleSize(const tuple *tuple);
+
 #endif //TUPLE_TUPLE_H

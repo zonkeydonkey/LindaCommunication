@@ -86,6 +86,42 @@ void printTuple(tuple *tuple)
     }
 }
 
+int getTupleSize(const tuple *tuple)
+{
+    int size = 0;
+    unsigned idx = 0;
+    size += sizeof(tuple->elementsCount);
+    std::list<intElement>::const_iterator intIter = tuple->intElements.begin();
+    for(std::list<stringElement>::const_iterator strIter = tuple->stringElements.begin();
+        strIter != tuple->stringElements.end();)
+    {
+        if((*strIter).idx == idx)
+        {
+            size += sizeof((uint8_t)STRING_TYPE);
+            int stringLength = (*strIter).value.length();
+            size += stringLength + 1;
+            ++strIter;
+        }
+        else if((*intIter).idx == idx)
+        {
+            size += sizeof((uint8_t)INT_TYPE);
+            size += sizeof((*intIter).value);
+            ++intIter;
+        }
+        else
+            return -1;
+        ++idx;
+    }
+    for(;intIter != tuple->intElements.end(); ++intIter)
+    {
+        size += sizeof((uint8_t)INT_TYPE);
+        size += sizeof((*intIter).value);
+        ++idx;
+    }
+    return size;
+}
+
+
 int serializeTuple(const tuple *tuple, char *buffer, int *size)
 {
     unsigned *buffer_begin = (unsigned *)buffer;
