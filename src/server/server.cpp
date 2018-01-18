@@ -4,7 +4,6 @@
 
 #include "server.h"
 
-// LindaCommunication
 const std::string Server::sharedConfFilename = "./src/shared/conf/queue.conf";
 const std::string Server::serverConfFilename = "./src/server/conf/queue.conf";
 const std::string Server::tupleSpaceConfFilename = "./src/server/conf/tupleSpace.conf";
@@ -94,7 +93,7 @@ FileResponseMessage Server::tryFindTuple(InputMessage &inputMessage)
 
     FileResponseMessage fileResponse;
 
-    if (msgrcv(responseFileQueueId, &fileResponse, FILE_RESPONSE_MAX_SIZE, inputMessage.PID, 0) < 0)
+    if (msgrcv(responseFileQueueId, &fileResponse, FILE_RESPONSE_MAX_SIZE - sizeof(long), inputMessage.PID, 0) < 0)
     {
         std::cerr << "Error while attempting to get response from file worker for process with PID: " << inputMessage.PID << std::endl;
         stop();
@@ -110,7 +109,7 @@ void Server::sendTupleFoundInfo (FileResponseMessage &fileResponseMessage)
     responseMessage.errorCode = ResponseError::ResponseOK;
     responseMessage.PID = fileResponseMessage.PID;
 
-    if (msgsnd(responseQueueId, &responseMessage, sizeof(responseMessage), IPC_NOWAIT) < 0) {
+    if (msgsnd(responseQueueId, &responseMessage, sizeof(responseMessage) - sizeof(long), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to send response with tuple has failed. Process PID: " << responseMessage.PID
                 << ", tuple: " << responseMessage.tuple << std::endl;
         stop();
@@ -123,7 +122,7 @@ void Server::sendBackTuple(FileResponseMessage &fileResponseMessage)
     std::memcpy(outputMessage.tuple, fileResponseMessage.tuple, fileResponseMessage.tupleSize);
     outputMessage.PID = fileResponseMessage.PID;
 
-    if (msgsnd(outputQueueId, &outputMessage, sizeof(outputMessage), IPC_NOWAIT) < 0) {
+    if (msgsnd(outputQueueId, &outputMessage, sizeof(outputMessage) - sizeof(long), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to resend message with tuple has failed. Process PID: " << outputMessage.PID
                   << ", tuple: " << outputMessage.tuple << std::endl;
         stop();
@@ -162,13 +161,13 @@ void * inputQueueThreadHandler (void * arg)
 
     while (server->running)
     {
-        if (msgrcv(server->inputQueueId, &inputMessage, INPUT_MESSAGE_MAX_SIZE, HIGHEST_PRIORITY, IPC_NOWAIT) >= 0)
+        if (msgrcv(server->inputQueueId, &inputMessage, INPUT_MESSAGE_MAX_SIZE- sizeof(long), HIGHEST_PRIORITY, IPC_NOWAIT) >= 0)
         {
             server->processHighPriorityInput(inputMessage);
         }
         else
         {
-            if (msgrcv(server->inputQueueId, &inputMessage, INPUT_MESSAGE_MAX_SIZE, 0, 0) < 0)
+            if (msgrcv(server->inputQueueId, &inputMessage, INPUT_MESSAGE_MAX_SIZE - sizeof(long), 0, 0) < 0)
             {
                 if(errno != EIDRM)
                     std::cerr << "Error while reading from input message queue\n";
@@ -190,7 +189,7 @@ void * outputQueueThreadHandler (void * arg)
 
     while (server->running)
     {
-        if (msgrcv(server->outputQueueId, &message, OUTPUT_MESSAGE_MAX_SIZE, 0, 0) < 0)
+        if (msgrcv(server->outputQueueId, &message, OUTPUT_MESSAGE_MAX_SIZE - sizeof(long), 0, 0) < 0)
         {
             if(errno != EIDRM)
                 std::cerr << "Error while reading from output message queue\n";
@@ -250,39 +249,6 @@ void Server::run ()
         return;
     }
 
-    /* do testow
-    OutputMessage message;
-    tuple myTuple = makeTuple("sis", "lol", 1, "xD");
-    int size = TUPLE_MAX_SIZE;
-    serializeTuple(&myTuple, message.tuple, &size);
-    message.PID = 12;
-    TextTemplate t1, t3;
-    NumberTemplate t2;
-    t1.setValues(Equals, 0, "lol");
-    t2.tempOp = Greater;
-    t2.value = 0;
-    t2.order = 0;
-    t3.setValues(Equals, 2, "xD");
-    InputMessage msg;
-    msg.priority = 0;
-    msg.PID = 12;
-    msg.isRead = true;
-    msg.timestamp = time(0);
-    msg.timeout = 1000;
-    msg.tupleTemplate.numberNb = 1;
-    msg.tupleTemplate.textNb = 0;
-    msg.tupleTemplate.numbers[0] = t2;
-    msg.tupleTemplate.texts[0] = t1;
-    msg.tupleTemplate.texts[1] = t3;
-    if(cmpToTupleTemplate(&myTuple, &msg.tupleTemplate) == 0)
-        std::cout << "NO FAJNIE" << std::endl;
-    else
-        std::cout << "NO NIE FAJNIE" << std::endl;
-
-    msg.tupleTemplate.print();
-    processOutputMessage(message);
-    processInputMessage(msg);*/
-
     pthread_join(inputMessagesThread, nullptr);
     pthread_join(outputMessagesThread, nullptr);
     pthread_join(fileWorkerThread, nullptr);
@@ -292,7 +258,7 @@ void Server::processOutputMessage(OutputMessage &message)
 {
     FileRequestMessage fileRequest;
     fileRequest.operation = Output;
-    memcpy(fileRequest.tuple, message.tuple, sizeof(message.tuple));
+    memcpy(fileRequest.tuple, message.tuple, message.originalSize);
     fileRequest.PID = message.PID;
     fileRequest.tupleSize = message.originalSize;
 

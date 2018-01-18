@@ -38,22 +38,25 @@ int FileWorker::receiveMessage()
 
 int FileWorker::outputService(FileRequestMessage *msg)
 {
-    FileResponseMessage resMsg;
-    resMsg.PID = msg->PID;
-    resMsg.threadID = Out;
+    //FileResponseMessage resMsg;
+    //resMsg.PID = msg->PID;
+    //resMsg.threadID = Out;
     if(printToFile(msg->tuple, msg->tupleSize) == -1)
     {
         std::cout << "File Worker - cannot save tuple in the tuple space" << std::endl;
-        resMsg.errorCode = OutputError;
+        //resMsg.errorCode = OutputError;
     }
     else
-        resMsg.errorCode = FileResponseOK;
-    if (msgsnd(responseFileQueueId, &resMsg, sizeof(resMsg), IPC_NOWAIT) < 0)
+    {
+        std::cout << "File Worker - save tuple in the tuple space:" << std::endl;
+        //resMsg.errorCode = FileResponseOK;
+    }
+    /*if (msgsnd(responseFileQueueId, &resMsg, sizeof(resMsg) - sizeof(long), IPC_NOWAIT) < 0)
     {
         perror("File Worker - message sending error: ");
         return -1;
-    }
-    printSendMsgInfo(&resMsg);
+    }*/
+    //printSendMsgInfo(&resMsg);
     return 0;
 }
 
@@ -85,7 +88,7 @@ int FileWorker::inputService(FileRequestMessage *msg)
     }
     filePos = 0;
     readedTupleBytesCount = 0;
-    if (msgsnd(responseFileQueueId, &resMsg, sizeof(resMsg), IPC_NOWAIT) < 0)
+    if (msgsnd(responseFileQueueId, &resMsg, sizeof(resMsg) - sizeof(long), IPC_NOWAIT) < 0)
     {
         perror("File Worker - message sending error: ");
         return -1;
@@ -117,7 +120,7 @@ int FileWorker::readService(FileRequestMessage *msg)
     }
     filePos = 0;
     readedTupleBytesCount = 0;
-    if (msgsnd(responseFileQueueId, &resMsg, sizeof(resMsg), IPC_NOWAIT) < 0)
+    if (msgsnd(responseFileQueueId, &resMsg, sizeof(resMsg) - sizeof(long), IPC_NOWAIT) < 0)
     {
         perror("File Worker - message sending error: ");
         return -1;
@@ -128,8 +131,8 @@ int FileWorker::readService(FileRequestMessage *msg)
 
 int FileWorker::printToFile(char *tupleBuffer, unsigned bytesCount)
 {
-    const char *tupleSpaceFilename = tupleSpaceFile.c_str();
-    std::ofstream file(tupleSpaceFilename, std::ofstream::app | std::ofstream::binary);
+    std::fstream file;
+    file.open(tupleSpaceFile, std::ios_base::in | std::ios_base::out | std::ios_base::app | std::ios_base::binary);
     if(file.is_open())
     {
         file.write(tupleBuffer, bytesCount);
@@ -143,8 +146,8 @@ int FileWorker::printToFile(char *tupleBuffer, unsigned bytesCount)
 
 const char *FileWorker::readFromFile()
 {
-    const char *tupleSpaceFilename = tupleSpaceFile.c_str();
-    std::ifstream file(tupleSpaceFilename, std::ofstream::in | std::ofstream::binary);
+    std::fstream file;
+    file.open(tupleSpaceFile, std::ios_base::in | std::ios_base::out | std::ios_base::binary);
     if(file.is_open())
     {
         file.seekg(filePos);
@@ -166,10 +169,11 @@ const char *FileWorker::readFromFile()
 
 int FileWorker::removeTupleFromFile()
 {
-    const char *tupleSpaceFilename = tupleSpaceFile.c_str();
-    const char *tempFileName = "temp";
-    std::ifstream file(tupleSpaceFilename, std::ofstream::in | std::ofstream::binary);
-    std::ofstream tempFile(tempFileName, std::ofstream::out | std::ofstream::binary);
+    std::string tempFileName = "temp";
+    std::fstream file;
+    std::fstream tempFile;
+    file.open(tupleSpaceFile, std::ios_base::in | std::ios_base::binary);
+    tempFile.open(tempFileName, std::ios_base::out | std::ios_base::binary);
     if(file.is_open() && tempFile.is_open())
     {
         file.seekg(filePos - 1 - readedTupleBytesCount);
@@ -190,8 +194,8 @@ int FileWorker::removeTupleFromFile()
         }
         file.close();
         tempFile.close();
-        remove(tupleSpaceFilename);
-        rename(tempFileName, tupleSpaceFilename);
+        remove(tupleSpaceFile.c_str());
+        rename(tempFileName.c_str(), tupleSpaceFile.c_str());
         return 0;
     }
     return -1;
