@@ -6,6 +6,7 @@
 #include <sys/msg.h>
 #include <unistd.h>
 #include <memory>
+#include <ctime>
 #include <iostream>
 #include "Parse.h"
 #include "../shared/messages/outputMessage.h" //tuples
@@ -29,6 +30,11 @@ class Client {
 			perror("Błąd - nie udało się pobrać krotki zgodnej ze wzorcem :");
 			return -1;
 		}
+		if (message.errorCode != ResponseOK)
+		{
+			std::cout << "timeout\n";
+			return 0;
+		}
 		tuple t = deserializeTuple(message.tuple);
 		std::cout << "Udało się znaleźć krotkę: ";
 		printTuple(&t);
@@ -37,12 +43,14 @@ class Client {
 
 	int readOrInputMessage(Atom commandType, TupleTemplate templ, time_t timeout) 
 	{
-		InputMessage message;
-		message.PID = getpid();
-		message.tupleTemplate = templ;
-		message.isRead = (commandType == readInstr);
-		message.timeout = timeout;
-	    if (msgsnd(inputQueueId, &message, sizeof(message), IPC_NOWAIT) < 0)
+		InputMessage inpMessage;
+        inpMessage.priority = 1;
+        inpMessage.PID = getpid();
+        inpMessage.tupleTemplate = templ;
+        inpMessage.isRead = (commandType == readInstr);
+        inpMessage.timeout = timeout;
+        inpMessage.timestamp = std::time(0);
+	    if (msgsnd(inputQueueId, &inpMessage, sizeof(inpMessage), IPC_NOWAIT) < 0)
 	    {
 	        perror("Błąd - wzór krotki nie został umieszczony w przestrzeni: ");
 	        return -1;
