@@ -30,6 +30,7 @@ class Client {
 			return -1;
 		}
 		tuple t = deserializeTuple(message.tuple);
+		std::cout << "Udało się znaleźć krotkę: ";
 		printTuple(&t);
 		return 0;
     }

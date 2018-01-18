@@ -5,9 +5,9 @@
 #include "server.h"
 
 // LindaCommunication
-const std::string Server::sharedConfFilename = "../LindaCommunication/src/shared/conf/queue.conf";
-const std::string Server::serverConfFilename = "../LindaCommunication/src/server/conf/queue.conf";
-const std::string Server::tupleSpaceConfFilename = "../LindaCommunication/src/server/conf/tupleSpace.conf";
+const std::string Server::sharedConfFilename = "./src/shared/conf/queue.conf";
+const std::string Server::serverConfFilename = "./src/server/conf/queue.conf";
+const std::string Server::tupleSpaceConfFilename = "./src/server/conf/tupleSpace.conf";
 
 Server::Server()
 {
