@@ -41,7 +41,7 @@ int FileWorker::outputService(FileRequestMessage *msg)
     //FileResponseMessage resMsg;
     //resMsg.PID = msg->PID;
     //resMsg.threadID = Out;
-    if(printToFile(msg->tuple, msg->tupleSize) == -1)
+    if(msg->tupleSize > TUPLE_MAX_SIZE || printToFile(msg->tuple, msg->tupleSize) == -1)
     {
         std::cout << "File Worker - cannot save tuple in the tuple space" << std::endl;
         //resMsg.errorCode = OutputError;
