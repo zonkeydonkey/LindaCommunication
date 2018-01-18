@@ -103,9 +103,9 @@ public:
 
 	int outputMessage(tuple toSave)
 	{
-		if (getTupleSize(toSave) > TUPLE_MAX_SIZE)
+		if (getTupleSize(&toSave) > TUPLE_MAX_SIZE)
 		{
-			std::cout << "Błąd - wielkość krotki wynosi " << getTupleSize(toSave) << ", maksymalna dopuszczalna to " << TUPLE_MAX_SIZE << std::endl;
+			std::cout << "Błąd - wielkość krotki wynosi " << getTupleSize(&toSave) << ", maksymalna dopuszczalna to " << TUPLE_MAX_SIZE << std::endl;
 			return -1;
 		}
 		OutputMessage message;
