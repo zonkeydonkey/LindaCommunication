@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <memory>
 #include<ctime>
+#include <climits>
 #include <iostream>
 #include "Parse.h"
 #include "../shared/messages/outputMessage.h" //tuples
@@ -143,7 +144,7 @@ public:
 						break;
 					case input:
 					case readInstr:
-						readOrInputMessage(cmd.cmd, cmd.tupleUnion.tt, 0);
+						readOrInputMessage(cmd.cmd, cmd.tupleUnion.tt, LONG_MAX - std::time(0));
 						break;
 					default:
 						break;
