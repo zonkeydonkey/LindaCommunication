@@ -16,6 +16,7 @@ typedef struct FileResponseMessage
     long PID;
     ThreadID threadID;
     char tuple [TUPLE_MAX_SIZE];
+    unsigned int tupleSize;
     int errorCode;
 } FileResponseMessage;
 

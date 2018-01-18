@@ -106,7 +106,7 @@ FileResponseMessage Server::tryFindTuple(InputMessage &inputMessage)
 void Server::sendTupleFoundInfo (FileResponseMessage &fileResponseMessage)
 {
     ResponseMessage responseMessage;
-    std::memcpy(responseMessage.tuple, fileResponseMessage.tuple, strlen(fileResponseMessage.tuple));
+    std::memcpy(responseMessage.tuple, fileResponseMessage.tuple, fileResponseMessage.tupleSize);
     responseMessage.errorCode = ResponseError::ResponseOK;
     responseMessage.PID = fileResponseMessage.PID;
 
@@ -120,7 +120,7 @@ void Server::sendTupleFoundInfo (FileResponseMessage &fileResponseMessage)
 void Server::sendBackTuple(FileResponseMessage &fileResponseMessage)
 {
     OutputMessage outputMessage;
-    std::memcpy(outputMessage.tuple, fileResponseMessage.tuple, strlen(fileResponseMessage.tuple));
+    std::memcpy(outputMessage.tuple, fileResponseMessage.tuple, fileResponseMessage.tupleSize);
     outputMessage.PID = fileResponseMessage.PID;
 
     if (msgsnd(outputQueueId, &outputMessage, sizeof(outputMessage), IPC_NOWAIT) < 0) {
@@ -244,7 +244,7 @@ void Server::run ()
         return;
 
     }
-    
+
     if(pthread_create(&fileWorkerThread, nullptr, &fileWorkerThreadHandler, this)) {
         std::cerr << "Error creating file worker thread\n";
         return;
