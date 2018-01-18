@@ -110,7 +110,7 @@ void Server::sendTupleFoundInfo (FileResponseMessage &fileResponseMessage)
     responseMessage.errorCode = ResponseError::ResponseOK;
     responseMessage.PID = fileResponseMessage.PID;
 
-    if (msgsnd(responseQueueId, &responseMessage, sizeof(responseMessage), IPC_NOWAIT) < 0) {
+    if (msgsnd(responseQueueId, &responseMessage, sizeof(responseMessage) - sizeof(long), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to send response with tuple has failed. Process PID: " << responseMessage.PID
                 << ", tuple: " << responseMessage.tuple << std::endl;
         stop();
@@ -123,7 +123,7 @@ void Server::sendBackTuple(FileResponseMessage &fileResponseMessage)
     std::memcpy(outputMessage.tuple, fileResponseMessage.tuple, strlen(fileResponseMessage.tuple));
     outputMessage.PID = fileResponseMessage.PID;
 
-    if (msgsnd(outputQueueId, &outputMessage, sizeof(outputMessage), IPC_NOWAIT) < 0) {
+    if (msgsnd(outputQueueId, &outputMessage, sizeof(outputMessage) - sizeof(long), IPC_NOWAIT) < 0) {
         std::cerr << "An attempt to resend message with tuple has failed. Process PID: " << outputMessage.PID
                   << ", tuple: " << outputMessage.tuple << std::endl;
         stop();
